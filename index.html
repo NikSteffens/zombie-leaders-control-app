@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zombie Leaders Control App</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="backdrop"></div>
+  <main class="app">
+    <header class="hero section">
+      <p class="kicker">Zombie Leaders</p>
+      <h1>Game Control Console</h1>
+      <p class="subtitle">
+        Assign hidden roles, brief players with adaptive narration, and run day/night audio cues.
+      </p>
+    </header>
+
+    <section class="section panel" id="setup-panel">
+      <h2>1) Player Setup</h2>
+      <p class="hint">Set number of players first, then optionally add names.</p>
+      <div class="row">
+        <div class="field compact">
+          <label for="player-count">Number of Players</label>
+          <input id="player-count" type="number" min="1" max="24" value="12">
+        </div>
+      </div>
+      <div class="field">
+        <label for="player-names">Player Names (Optional)</label>
+        <textarea id="player-names" rows="8" placeholder="Alex&#10;Jordan&#10;Sam&#10;(leave blank to auto-create Player 1..N)"></textarea>
+      </div>
+      <div class="row">
+        <div class="field compact">
+          <label for="zombie-count">Zombie Leaders</label>
+          <input id="zombie-count" type="number" min="1" max="4" value="3">
+        </div>
+        <div class="field compact">
+          <label for="night-duration">Background Audio (seconds)</label>
+          <input id="night-duration" type="number" min="15" max="240" value="60">
+        </div>
+      </div>
+    </section>
+
+    <section class="section panel" id="roles-panel">
+      <div class="section-head">
+        <h2>2) Special Citizen Roles</h2>
+        <div class="button-group">
+          <button id="select-all-roles" type="button" class="ghost">Select All (Recommended)</button>
+          <button id="clear-all-roles" type="button" class="ghost">Clear All</button>
+        </div>
+      </div>
+      <p class="hint">
+        By default no special roles are selected. If no special roles are assigned, players receive the role
+        "Organizational Citizen" with no special abilities. Checked roles are available for assignment.
+      </p>
+      <div id="roles-grid" class="roles-grid"></div>
+      <div class="actions">
+        <button id="generate-game" type="button" class="primary">Generate Game</button>
+      </div>
+      <p id="setup-status" class="status" aria-live="polite"></p>
+    </section>
+
+    <section class="section panel" id="assignments-panel">
+      <div class="section-head">
+        <h2>3) Secret Role Cards</h2>
+        <button id="hide-all-cards" type="button" class="ghost">Hide All Cards</button>
+      </div>
+      <div id="game-summary" class="summary"></div>
+      <div id="cards-grid" class="cards-grid"></div>
+    </section>
+
+    <section class="section panel" id="audio-panel">
+      <h2>4) Audio Director</h2>
+      <div class="row">
+        <label class="switch">
+          <input id="orientation-enabled" type="checkbox" checked>
+          <span>Include orientation (for first-time players)</span>
+        </label>
+      </div>
+      <div class="row audio-controls">
+        <button id="play-orientation" type="button">Play Orientation</button>
+        <button id="play-intro" type="button">Play Introduction</button>
+        <button id="play-day" type="button">Play Day Sequence</button>
+        <button id="stop-speech" type="button" class="ghost">Stop Voice</button>
+      </div>
+      <div class="row">
+        <div class="field compact">
+          <label for="voice-rate">Voice Speed</label>
+          <input id="voice-rate" type="range" min="0.6" max="1.8" step="0.1" value="1">
+          <p id="voice-rate-value" class="control-value">1.00x</p>
+        </div>
+        <div class="field compact">
+          <label for="voice-pitch">Voice Pitch</label>
+          <input id="voice-pitch" type="range" min="0.7" max="1.4" step="0.05" value="1">
+          <p id="voice-pitch-value" class="control-value">1.00x</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field compact">
+          <label for="voice-mode">Voice List</label>
+          <select id="voice-mode">
+            <option value="recommended" selected>Recommended (stable English)</option>
+            <option value="english">All English voices</option>
+            <option value="all">All voices</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="voice-select">Voice</label>
+          <select id="voice-select"></select>
+        </div>
+        <div class="button-group voice-tools">
+          <button id="test-voice" type="button">Test Voice</button>
+          <button id="reset-voice" type="button" class="ghost">Reset Voice</button>
+        </div>
+      </div>
+      <p class="hint">Voices come from your browser and operating system. Use Recommended for best reliability.</p>
+
+      <div class="night-box">
+        <h3>Background Audio (Masking / Atmosphere)</h3>
+        <p class="hint">Choose one of 20 gameground sounds. Default is Haunted Wind.</p>
+        <div class="row">
+          <div class="field">
+            <label for="ambience-select">Soundscape</label>
+            <select id="ambience-select"></select>
+          </div>
+        </div>
+        <div class="row audio-controls">
+          <button id="start-night" type="button" class="danger">Start Background Audio</button>
+          <button id="stop-night" type="button" class="ghost">Stop Background Audio</button>
+        </div>
+      </div>
+
+      <p id="audio-status" class="status" aria-live="polite"></p>
+
+      <div class="script-grid">
+        <div class="script-box">
+          <h3>Orientation Script</h3>
+          <textarea id="orientation-script" rows="8" readonly></textarea>
+        </div>
+        <div class="script-box">
+          <h3>Introduction Script</h3>
+          <textarea id="intro-script" rows="8" readonly></textarea>
+        </div>
+        <div class="script-box">
+          <h3>Day Sequence Script</h3>
+          <textarea id="day-script" rows="8" readonly></textarea>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
