@@ -27,6 +27,11 @@ Local browser app to run the Zombie Leaders game flow:
 5. Click **Generate Game**.
 6. Use **Secret Role Cards** and **Audio Director** controls to run the session.
 
+## Access Code
+
+- App opens behind a lock screen.
+- Current code: `runaway`
+
 ## Notes
 
 - Role scripts automatically change based on which special roles are actually assigned.

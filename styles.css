@@ -56,6 +56,53 @@ body {
   z-index: 1;
 }
 
+body.locked {
+  overflow: hidden;
+}
+
+body.locked .app {
+  filter: blur(8px) saturate(0.7);
+  pointer-events: none;
+  user-select: none;
+}
+
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(2, 8, 14, 0.68);
+  backdrop-filter: blur(4px);
+}
+
+body:not(.locked) .auth-gate {
+  display: none;
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  background: rgba(7, 17, 25, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 1rem 1.05rem 1.1rem;
+}
+
+.auth-card h2 {
+  color: var(--accent-gold);
+}
+
+.auth-actions {
+  margin: 0;
+}
+
+.auth-status {
+  margin-top: 0.6rem;
+}
+
 .section {
   margin-bottom: 1.1rem;
   animation: rise-in 500ms ease both;
@@ -164,6 +211,7 @@ button {
 
 textarea,
 input[type="number"],
+input[type="password"],
 select {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.18);

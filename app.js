@@ -2,6 +2,8 @@ const MAX_PLAYERS = 24;
 const MAX_ZOMBIES = 4;
 const ENGLISH_LANG_RE = /^en(?:-|_|$)/i;
 const PREFERRED_ENGLISH_LANGS = ["en-AU", "en-GB", "en-US"];
+const ACCESS_CODE = "runaway";
+const ACCESS_SESSION_KEY = "zombie-leaders-unlocked";
 const DEFAULT_AMBIENCE_ID = "haunted-wind";
 const AMBIENT_PRESETS = [
   { id: "haunted-wind", name: "Haunted Wind (Default)", engine: "wind", gain: 0.24, color: 260 },
@@ -200,6 +202,10 @@ const CITIZEN_ROLES = [
 ];
 
 const dom = {
+  authGate: document.getElementById("auth-gate"),
+  authForm: document.getElementById("auth-form"),
+  accessCode: document.getElementById("access-code"),
+  authStatus: document.getElementById("auth-status"),
   playerCount: document.getElementById("player-count"),
   playerNames: document.getElementById("player-names"),
   zombieCount: document.getElementById("zombie-count"),
@@ -251,10 +257,12 @@ function init() {
   populateVoiceList();
   state.scripts = buildFallbackScripts();
   updateScriptViews();
+  setupAccessGate();
   setSetupStatus("Add players and click Generate Game.");
 }
 
 function bindEvents() {
+  dom.authForm.addEventListener("submit", handleAuthSubmit);
   dom.selectAllRoles.addEventListener("click", () => setRoleCheckboxes(true));
   dom.clearAllRoles.addEventListener("click", () => setRoleCheckboxes(false));
   dom.generateGame.addEventListener("click", handleGenerateGame);
@@ -276,6 +284,62 @@ function bindEvents() {
     stopSpeech();
     stopNightAudio();
   });
+}
+
+function setupAccessGate() {
+  const isUnlocked = getSessionUnlockState();
+  if (isUnlocked) {
+    unlockApp();
+    return;
+  }
+  lockApp();
+}
+
+function handleAuthSubmit(event) {
+  event.preventDefault();
+  const entered = String(dom.accessCode.value || "").trim().toLowerCase();
+  if (!entered) {
+    setAuthStatus("Enter the access code.", true);
+    return;
+  }
+  if (entered !== ACCESS_CODE) {
+    setAuthStatus("Incorrect access code.", true);
+    dom.accessCode.focus();
+    dom.accessCode.select();
+    return;
+  }
+
+  setSessionUnlockState(true);
+  setAuthStatus("");
+  unlockApp();
+}
+
+function lockApp() {
+  document.body.classList.add("locked");
+  dom.accessCode.value = "";
+  dom.accessCode.focus();
+}
+
+function unlockApp() {
+  document.body.classList.remove("locked");
+}
+
+function getSessionUnlockState() {
+  try {
+    return window.sessionStorage.getItem(ACCESS_SESSION_KEY) === "true";
+  } catch (_) {
+    return false;
+  }
+}
+
+function setSessionUnlockState(value) {
+  try {
+    if (value) {
+      window.sessionStorage.setItem(ACCESS_SESSION_KEY, "true");
+    } else {
+      window.sessionStorage.removeItem(ACCESS_SESSION_KEY);
+    }
+  } catch (_) {}
 }
 
 function renderRolePicker() {
@@ -1712,6 +1776,11 @@ function capitalize(text) {
 function setSetupStatus(message, isError = false) {
   dom.setupStatus.textContent = message;
   dom.setupStatus.style.color = isError ? "var(--danger)" : "var(--accent-mint)";
+}
+
+function setAuthStatus(message, isError = false) {
+  dom.authStatus.textContent = message;
+  dom.authStatus.style.color = isError ? "var(--danger)" : "var(--accent-mint)";
 }
 
 function setAudioStatus(message, isError = false) {

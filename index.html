@@ -6,8 +6,23 @@
   <title>Zombie Leaders Control App</title>
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body class="locked">
   <div class="backdrop"></div>
+  <div class="auth-gate" id="auth-gate" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <form id="auth-form" class="auth-card">
+      <p class="kicker">Private Access</p>
+      <h2 id="auth-title">Zombie Leaders Access</h2>
+      <p class="hint">Enter the access code to open the app.</p>
+      <div class="field">
+        <label for="access-code">Access Code</label>
+        <input id="access-code" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="row auth-actions">
+        <button id="unlock-app" type="submit" class="primary">Unlock App</button>
+      </div>
+      <p id="auth-status" class="status auth-status" aria-live="polite"></p>
+    </form>
+  </div>
   <main class="app">
     <header class="hero section">
       <p class="kicker">Zombie Leaders</p>
