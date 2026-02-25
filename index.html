@@ -42,7 +42,7 @@
         </div>
       </div>
       <div class="field">
-        <label for="player-names">Player Names (Optional)</label>
+        <label for="player-names">Player Names (Optional). If you want the computer to randomly assign roles to players, add players' names here. If you want players to physically draw their role card, leave this blank (you can enter player names later to match their role).</label>
         <textarea id="player-names" rows="8" placeholder="Alex&#10;Jordan&#10;Sam&#10;(leave blank to auto-create Player 1..N)"></textarea>
       </div>
       <div class="row">
@@ -61,15 +61,16 @@
       <div class="section-head">
         <h2>2) Special Citizen Roles</h2>
         <div class="button-group">
-          <button id="select-all-roles" type="button" class="ghost">Select All (Recommended)</button>
+          <button id="select-all-roles" type="button" class="ghost">Select all</button>
           <button id="clear-all-roles" type="button" class="ghost">Clear All</button>
         </div>
       </div>
       <p class="hint">
         By default no special roles are selected. If no special roles are assigned, players receive the role
-        "Organizational Citizen" with no special abilities. Checked roles are available for assignment.
+        "Organizational citizen" with no special abilities. Checked roles are available for assignment.
       </p>
       <div id="roles-grid" class="roles-grid"></div>
+      <div id="role-icon-legend" class="icon-legend"></div>
       <div class="actions">
         <button id="generate-game" type="button" class="primary">Generate Game</button>
       </div>
@@ -79,7 +80,10 @@
     <section class="section panel" id="assignments-panel">
       <div class="section-head">
         <h2>3) Secret Role Cards</h2>
-        <button id="hide-all-cards" type="button" class="ghost">Hide All Cards</button>
+        <div class="button-group">
+          <button id="reveal-all-cards" type="button" class="ghost">Reveal All Cards</button>
+          <button id="hide-all-cards" type="button" class="ghost">Hide All Cards</button>
+        </div>
       </div>
       <div id="game-summary" class="summary"></div>
       <div id="cards-grid" class="cards-grid"></div>
@@ -97,6 +101,7 @@
         <button id="play-orientation" type="button">Play Orientation</button>
         <button id="play-intro" type="button">Play Introduction</button>
         <button id="play-day" type="button">Play Day Sequence</button>
+        <button id="play-night-script" type="button">Play Night Sequence</button>
         <button id="stop-speech" type="button" class="ghost">Stop Voice</button>
       </div>
       <div class="row">
@@ -160,6 +165,10 @@
         <div class="script-box">
           <h3>Day Sequence Script</h3>
           <textarea id="day-script" rows="8" readonly></textarea>
+        </div>
+        <div class="script-box">
+          <h3>Night Sequence Script</h3>
+          <textarea id="night-script" rows="8" readonly></textarea>
         </div>
       </div>
     </section>

@@ -52,154 +52,194 @@ const AMBIENT_PRESETS = [
 
 const BASE_CITIZEN_ROLE = {
   id: "organizational-citizen",
-  name: "Organizational Citizen",
-  summary: "Use discussion and voting to identify Zombie Leaders.",
-  introCue: "You have no special ability, but your voice and vote matter every day.",
-  dayCue: "Speak clearly, track contradictions, and vote with intent.",
+  name: "Organizational citizen",
+  summary: "You do the hard work that Zombie Leaders like to take credit for.",
 };
 
 const CITIZEN_ROLES = [
   {
-    id: "ethics-officer",
-    name: "Ethics Officer",
-    summary: "Can call one integrity check during the day.",
-    introCue: "You may call one integrity check each game: ask a player to explain a suspicious claim.",
-    dayCue: "Ethics Officer, decide if this is the day to use your integrity check.",
+    id: "office-manager",
+    name: "Integrity Officer",
+    summary: "You can do a background check on someone every day to see if they are a Zombie Leader.",
   },
   {
-    id: "whistleblower",
-    name: "Whistleblower",
-    summary: "Publicly flags one behavioral red flag per day.",
-    introCue: "Once per day, publicly highlight one red flag in behavior or logic.",
-    dayCue: "Whistleblower, if needed, call out one red flag now.",
+    id: "hr-lead",
+    name: "Personnel Manager",
+    summary: "You identify one person every day whose career you will save from destruction by the Zombie Leaders.",
   },
   {
-    id: "risk-auditor",
-    name: "Risk Auditor",
-    summary: "Tracks elimination patterns and motive chains.",
-    introCue: "Document who benefits from each elimination and report your risk map during the day.",
-    dayCue: "Risk Auditor, share your latest motive chain before voting.",
+    id: "it-specialist",
+    name: "IT Specialist",
+    summary: "You can hack the organization’s IT system on two separate occasions — once to get rid of someone; once to save someone.",
   },
   {
-    id: "security-guardian",
-    name: "Security Guardian",
-    summary: "Quietly chooses one player to protect each night.",
-    introCue: "Each night, choose one player to protect from Zombie elimination.",
-    dayCue: "Security Guardian, avoid exposing your identity while guiding the discussion.",
+    id: "office-matchmaker",
+    name: "Office Matchmaker",
+    summary: "You select two organizational members to fall in love — so that if one of them leaves, the other does too.",
   },
   {
-    id: "team-medic",
-    name: "Team Medic",
-    summary: "Can stabilize one eliminated citizen once per game.",
-    introCue: "You may use one stabilization charge per game to reverse a fresh citizen elimination, if rules permit.",
-    dayCue: "Team Medic, decide whether to hold or use your stabilization power.",
+    id: "union-rep",
+    name: "Union Rep",
+    count: 2,
+    summary: "You work secretly with the other Reps to fight Zombie Leadership. But if you reveal your identity you will be instantly dismissed.",
   },
   {
-    id: "data-analyst",
-    name: "Data Analyst",
-    summary: "Builds evidence from statement consistency.",
-    introCue: "Track statement changes and summarize inconsistencies before the vote.",
-    dayCue: "Data Analyst, present your consistency findings now.",
+    id: "training-supervisor",
+    name: "Training Supervisor",
+    summary: "Every day you send one member of the organization off to complete mandatory training.",
   },
   {
-    id: "culture-coach",
-    name: "Culture Coach",
-    summary: "Steadies heated debates and improves signal quality.",
-    introCue: "If discussions get chaotic, reset the group by asking for evidence-only responses.",
-    dayCue: "Culture Coach, reset the room if the discussion loses clarity.",
+    id: "schosshundchen",
+    name: "Schoßhündchen (Boss’s Pet)",
+    summary: "You are protected by people high up in the organization — so the first time that you are targeted by Zombie Leaders you are not harmed.",
   },
   {
-    id: "legal-advisor",
-    name: "Legal Advisor",
-    summary: "Clarifies procedural fairness and voting rules.",
-    introCue: "You are the rules memory for fair process. Clarify procedural confusion quickly.",
-    dayCue: "Legal Advisor, confirm the vote process before ballots are cast.",
+    id: "intern",
+    name: "Intern",
+    summary: "Every day you can choose to spend time with a new mentor. If you are targeted by the ZLs you are protected from harm; but if your mentor is terminated, you are too.",
   },
   {
-    id: "operations-chief",
-    name: "Operations Chief",
-    summary: "Keeps day discussions moving on schedule.",
-    introCue: "Keep the group focused and make sure each player is heard before voting.",
-    dayCue: "Operations Chief, drive the room toward a timely decision.",
+    id: "sycophant",
+    name: "Sycophant",
+    summary: "Unbeknown to the Zombie Leaders, you are working secretly for their victory. If they win, so do you.",
   },
   {
-    id: "networker",
-    name: "Networker",
-    summary: "Connects isolated players into the discussion.",
-    introCue: "Pull in quiet players and compare their logic with louder voices.",
-    dayCue: "Networker, invite at least two quiet voices into this round.",
+    id: "office-gossip",
+    name: "Office Gossip",
+    summary: "You know a lot of dirt about your colleagues. This means that if you are fired by the Zombie Leaders, you can take someone else down with you.",
   },
   {
-    id: "mentor",
-    name: "Mentor",
-    summary: "Supports uncertain players to avoid panic voting.",
-    introCue: "Help uncertain players reason through evidence before they vote.",
-    dayCue: "Mentor, ask one hesitant player to explain their logic.",
-  },
-  {
-    id: "strategist",
-    name: "Strategist",
-    summary: "Maps likely zombie coordination patterns.",
-    introCue: "Identify potential alliances and suspicious vote blocs.",
-    dayCue: "Strategist, share your current alliance map and top suspects.",
-  },
-  {
-    id: "archivist",
-    name: "Archivist",
-    summary: "Maintains a clean timeline of claims and events.",
-    introCue: "Record key statements and replay them during contradictions.",
-    dayCue: "Archivist, recap the timeline before the vote.",
-  },
-  {
-    id: "finance-sentinel",
-    name: "Finance Sentinel",
-    summary: "Follows resource and incentive logic.",
-    introCue: "Ask who gains power or cover from each decision.",
-    dayCue: "Finance Sentinel, present who benefits from today's choices.",
-  },
-  {
-    id: "innovation-catalyst",
-    name: "Innovation Catalyst",
-    summary: "Proposes unconventional tests to expose zombies.",
-    introCue: "Create one creative challenge to test alignment without breaking rules.",
-    dayCue: "Innovation Catalyst, propose one fresh test before voting.",
-  },
-  {
-    id: "morale-builder",
-    name: "Morale Builder",
-    summary: "Prevents fear-driven group collapse.",
-    introCue: "Keep confidence high and discourage emotional pile-ons.",
-    dayCue: "Morale Builder, recentre the team before final discussion.",
-  },
-  {
-    id: "negotiator",
-    name: "Negotiator",
-    summary: "De-escalates deadlocks and extracts clear commitments.",
-    introCue: "When factions split, extract concrete commitments from both sides.",
-    dayCue: "Negotiator, break any deadlock with clear commitments.",
-  },
-  {
-    id: "process-optimizer",
-    name: "Process Optimizer",
-    summary: "Improves meeting structure for better decisions.",
-    introCue: "Suggest tighter turn-taking and evidence-first speaking order.",
-    dayCue: "Process Optimizer, tighten the flow before final votes.",
-  },
-  {
-    id: "comms-lead",
-    name: "Communications Lead",
-    summary: "Translates complex evidence into clear language.",
-    introCue: "Summarize confusing arguments so everyone can evaluate them.",
-    dayCue: "Communications Lead, deliver a clear summary now.",
-  },
-  {
-    id: "forensics-specialist",
-    name: "Forensics Specialist",
-    summary: "Looks for subtle tells in wording and timing.",
-    introCue: "Observe speech patterns and timing shifts for hidden coordination.",
-    dayCue: "Forensics Specialist, report your strongest behavioral signal.",
+    id: "social-club-organizer",
+    name: "Social Club Organizer",
+    summary: "In a round of your choosing, you arrange a group activity for yourself and three other people. This protects you from being harmed by the ZLs in that round.",
   },
 ];
+
+const ROLE_ICON_META = Object.freeze({
+  "zombie-leader": {
+    label: "Zombie Leader",
+    symbol: "🧟",
+    hue: 12,
+    images: [
+      "01_thumbnail icons/Zombie Leader 1.png",
+      "01_thumbnail icons/Zombie Leader 2.png",
+      "01_thumbnail icons/Zombie Leader 3.png",
+      "01_thumbnail icons/Zombie Leader 4.png",
+    ],
+  },
+  "organizational-citizen": {
+    label: "Organizational Citizen",
+    symbol: "🏢",
+    hue: 160,
+    images: [
+      "01_thumbnail icons/Organizational Citizen 1.png",
+      "01_thumbnail icons/Organizational Citizen 2.png",
+      "01_thumbnail icons/Organizational Citizen 3.png",
+      "01_thumbnail icons/Organizational Citizen 4.png",
+      "01_thumbnail icons/Organizational Citizen 5.png",
+    ],
+  },
+  "office-manager": {
+    label: "Integrity Officer",
+    symbol: "📋",
+    hue: 205,
+    images: ["01_thumbnail icons/Integrity Officer.png"],
+  },
+  "hr-lead": {
+    label: "Personnel Manager",
+    symbol: "🛡️",
+    hue: 182,
+    images: ["01_thumbnail icons/Personnel Manager.png"],
+  },
+  "it-specialist": {
+    label: "IT Specialist",
+    symbol: "💻",
+    hue: 226,
+    images: ["01_thumbnail icons/IT Specialist.png"],
+  },
+  "office-matchmaker": {
+    label: "Office Matchmaker",
+    symbol: "💘",
+    hue: 332,
+    images: ["01_thumbnail icons/Office Matchmaker.png"],
+  },
+  "union-rep": {
+    label: "Union Rep",
+    symbol: "✊",
+    hue: 34,
+    images: [
+      "01_thumbnail icons/Union Rep 1.png",
+      "01_thumbnail icons/Union Rep 2.png",
+      "01_thumbnail icons/Union Rep 3.png",
+    ],
+  },
+  "training-supervisor": {
+    label: "Training Supervisor",
+    symbol: "🎓",
+    hue: 274,
+    images: ["01_thumbnail icons/Training supervisor.png"],
+  },
+  "schosshundchen": {
+    label: "Schoßhündchen (Boss’s Pet)",
+    symbol: "🐾",
+    hue: 42,
+    images: ["01_thumbnail icons/Boss's Pet.png"],
+  },
+  "intern": {
+    label: "Intern",
+    symbol: "🌱",
+    hue: 124,
+    images: ["01_thumbnail icons/Intern.png"],
+  },
+  "sycophant": {
+    label: "Sycophant",
+    symbol: "🎭",
+    hue: 316,
+    images: ["01_thumbnail icons/Sycophant.png"],
+  },
+  "office-gossip": {
+    label: "Office Gossip",
+    symbol: "🗣️",
+    hue: 350,
+    images: ["01_thumbnail icons/Office Gossip.png"],
+  },
+  "social-club-organizer": {
+    label: "Social Club Organizer",
+    symbol: "🎉",
+    hue: 52,
+    images: ["01_thumbnail icons/Social Club Organizer.png"],
+  },
+});
+
+const SCRIPT_TEXT = {
+  orientation: [
+    "Welcome to Happy Days Corporation (HDC) — an organization where we like to put the smile on everyone’s faces and keep it there. I’m the Departmental Administrator and my goal is to make your time here as fulfilling and rewarding as possible. Unfortunately, though, as you are about find out, there are some very extreme structural constraints that limit my ability to do this. Historically, as our name suggests, we have been a very happy organization. Our leaders worked hard to create, advance, represent and embed a shared sense of “us” and — in line with what we know from research — this was a place where people enjoyed their work and were both healthy and productive. Unfortunately, though, HDC has recently been going through a tough time. Things started going downhill after some of our senior executives went on a shonky Leadership Development course last year. This led to them being infected with a toxic mindset that researchers have identified as arising from an approach to management known as Zombie Leadership.",
+    "Devotees of Zombie Leadership — Zombie Leaders — are committed to the idea that leaders are inherently superior to everyone else and hence that they are “born to lead”. They think that everything they do is right, that they alone know how best to do things, that everyone can see how wonderful they are, and that they should be extravagantly rewarded for the work they do. Sadly, HDC now has a number of Zombie Leaders in its top ranks. Precisely how many there are of them is unknown — but they are in the process of destroying our organization. [There is also potentially a Sycophant who is aligned with the Zombie Leaders, but who they don’t know about.] If the Zombie Leaders destroy the organization, they will have won [and the Sycophant will win too]. The good news is, there are still plenty of decent, sensible people working here. ….",
+    "We have a great Integrity Officer, who can view one person's CV each morning to see if they are a Zombie Leader. We also have a great Personnel Manager who can identify one person every day that they will protect from attack by the Zombie Leaders (but note that they must choose a different person every day). We have a very cluey IT Specialist who can hack the IT system twice in the course of the game — once to get rid of someone they suspect of being a Zombie Leader; once to save someone they want to protect from the Zombie Leaders. We have a Matchmaker who is keen to cultivate office romance and who is going to weave their magic to make two members of HDC fall in love. This, though, means that if one of these two Lovers leaves the organization (for whatever reason) the other will too. ….",
+    "Defending everyone’s rights, we also have some Union Reps. They will be known to each other and will act in solidarity to defend us from the Zombie Leaders. However, because the Zombie Leaders are very vindictive, if the Union Reps ever reveal — or even hint at —their identity they will be instantly dismissed. And if anyone else hints at the Union Reps’ identity they too will be fired. We also have a very enthusiastic Training Supervisor. They take their job seriously and every day will be send one person off to complete mandatory training. There are a range of courses that people will be completing — covering everything from Managing Conflicts of Interest and Respectful Relationships in the Workplace to Fire Safety. These courses were mandated by the Zombie Leaders, but, as you’ll discover, they don’t pay much attention to them themselves. There is also one member of HDC who is the Schoßhündchen (the Boss’s Pet). They are protected by one of the non-zombie senior managers, and this means that they will not lose their position the first time that the Zombie Leaders target them. Happily, we also have an Intern. Every day they can, if they want, decide to spend time with a Mentor of their choosing. This means that if they are targeted by the Zombie Leaders that night, they won’t be terminated. However, if their mentor is terminated, the intern will be terminated along with them. We also have a very enthusiastic Office Gossip. They have the dirt on everybody and if they are targeted by the Zombie Leaders they will not necessarily go quietly — and can take someone down with them in retaliation if they so desire. In light of the increasing job demands that the Zombie Leaders are placing on us, we are also lucky to have a Social Club Organizer. In a round of their choosing they can set up a social club for themselves and up to three other people in HDC. Due to the well-evidenced socially curative effects of group memberships, this protects them all from being harmed by the Zombie Leaders in that round.",
+    "Finally, we have a number of Organizational Citizens. They are the backbone of HDC and they have been serving the company loyally for a great many years. We are grateful for their service but mindful that the Zombie Leaders are always looking for ways to reduce their ranks — while at the same time taking credit for everything they achieve. The big question, then, is whether we can save ourselves from the impending Zombie Leadership Apocalypse. Let us not go quietly into that dark night.",
+  ],
+  intro: [
+    "The first thing I’d like to do is work out what role everyone has, because, after the last restructure that the Zombie Leaders initiated, everyone — including me — is a lot confused. And because some of this information is secret, I’d also like everyone to close your eyes. First, I’d like the Zombie Leaders to open your eyes and acknowledge each other. You are dirtbags and proud of it. Now please close your eyes [and raise one hand. Could the Sycophant also please open your eyes and look at me and take note of the Zombie Leaders with their hands raised. Now please close your eyes and do your worst]. Now could the Integrity Officer open your eyes and look at me please. Thank you and good luck. Please close your eyes. Now could the Personnel Manager please open your eyes and look at me. Thank you and good luck. Please close your eyes.",
+    "Now IT Specialist open your eyes and look at me please. Thank you and good luck. Please close your eyes. Now could the Training Supervisor open your eyes and look at me please. Thank you and good luck. Please close your eyes. Now could the Schoßhündchen (Boss’s Pet) open your eyes and look at me please. Thank you and good luck. Please close your eyes. Now could the Social Club Organiser open your eyes and look at me please. Thank you and good luck. Please close your eyes. Now could the Office Gossip open your eyes and look at me please. Thank you and good luck. Please close your eyes. Now could the Intern open your eyes and look at me please. Thank you and good luck. Please close your eyes. ….",
+    "Now could the Matchmaker open your eyes and look at me. Can you point to two people who you would like to fall in love with each other? [Pause] Thank you — you can close your eyes. Now if I tap you on the knee, please open your eyes and gaze upon your new life partner. Your fates will now be inextricably intertwined — so if one of you leaves us, the other will too. [Pause] Now please close your eyes and commit yourselves to a future in which you are bound together in perpetuity. Now could the Union Reps open your eyes and identify each other. You have a difficult job ahead of you and you will need to work as a united force. Your strength lies in your solidarity and your unwavering commitment to the AntiZombie Leadership Alliance. Remember, you are fighting for fairness, for dignity, and for a better future — but you can never speak of this endeavour. Thank you. And now please close your eyes. Finally, could the Organizational Citizens please keep your eyes closed and raise your hands so that I can see who you are? Thank you. We are now ready to get to work. This is a new day at Happy Days Corporation and the first thing I’d like you to do is elect a Head of Department. This person is going to be in charge of your meetings and they will also have the deciding vote if any votes are tied — so choose wisely.",
+  ],
+  day: [
+    "We would like you to have a discussion to see if there is anyone you would like to remove from the organization because you suspect them of being a Zombie Leader. You can also choose not to remove anyone, but that decision must be unanimous. [Pause for discussion: setting alarm time] Now I know it’s been a long day and that everyone is very tired, but before you go home, we need to make plans for tomorrow. I’d also like you to close your eyes so that we can do this in private. Integrity Officer please open your eyes and tell me whose CV you would like to take home to have a look at? [Pause] Thank you. Please close your eyes. Personnel Manager please open your eyes and indicate whose career you would like to save from attack by Zombie Leaders tonight. [Pause] Thank you. Please close your eyes. Now IT Specialist please open your eyes and let me know if you would like to use your one chance to save the person who is going to be targeted by the ZLs tonight? Do you want to use your one chance to get rid of someone? [Pause] Thank you. Now please close your eyes.",
+  ],
+  night: [
+    "The day has faded into night.",
+    "Now could the Training Supervisor open your eyes and let me know who you would like to send on mandatory training tomorrow. Tomorrow’s course promises to be very exciting and is on [Pause] Thank you. Please close your eyes.",
+    "Now could the Social Club Organiser open your eyes and let me know if you want to use your one chance to go on a 24-hour excursion and, if so, who you would like to take with you. [Pause] Thank you. Please close your eyes.",
+    "Now could the Office Gossip please open your eyes and look at me. If your career is destroyed by the Zombie Leaders tonight, is there anyone you would like to take down with you? [Pause] Thank you. Please close your eyes.",
+    "Now, finally, could the Intern open your eyes and let me know who, if anyone, you would like to have as your mentor for the next 24 hours. [Pause] Thank you. Please close your eyes.",
+    "Thank you everyone for your work today. It’s now time for everyone to go home and get a good night’s rest, as it’s going to be another busy day tomorrow.",
+    "Everyone closes their eyes except the Zombie Leaders, who now convene to identify someone whose position in HDC they are going to terminate (typically, the person who they perceive to be the greatest threat to them, or else to throw the Organizational Citizens off their scent).",
+    "They need to do this using non-verbal communication, so as not to be identifiable.",
+    "Depending on the environment in which the game takes place, it may be necessary to play music to mask any sound that the Zombie Leaders make.",
+    "Once the Zombie Leaders have decided who they want to eliminate, the new day starts with the Departmental Administrator announcing the implications of the Zombie Leaders’ decision.",
+  ],
+};
 
 const dom = {
   authGate: document.getElementById("auth-gate"),
@@ -211,17 +251,20 @@ const dom = {
   zombieCount: document.getElementById("zombie-count"),
   nightDuration: document.getElementById("night-duration"),
   rolesGrid: document.getElementById("roles-grid"),
+  roleIconLegend: document.getElementById("role-icon-legend"),
   selectAllRoles: document.getElementById("select-all-roles"),
   clearAllRoles: document.getElementById("clear-all-roles"),
   generateGame: document.getElementById("generate-game"),
   setupStatus: document.getElementById("setup-status"),
   gameSummary: document.getElementById("game-summary"),
   cardsGrid: document.getElementById("cards-grid"),
+  revealAllCards: document.getElementById("reveal-all-cards"),
   hideAllCards: document.getElementById("hide-all-cards"),
   orientationEnabled: document.getElementById("orientation-enabled"),
   playOrientation: document.getElementById("play-orientation"),
   playIntro: document.getElementById("play-intro"),
   playDay: document.getElementById("play-day"),
+  playNightScript: document.getElementById("play-night-script"),
   stopSpeech: document.getElementById("stop-speech"),
   startNight: document.getElementById("start-night"),
   stopNight: document.getElementById("stop-night"),
@@ -238,15 +281,17 @@ const dom = {
   orientationScript: document.getElementById("orientation-script"),
   introScript: document.getElementById("intro-script"),
   dayScript: document.getElementById("day-script"),
+  nightScript: document.getElementById("night-script"),
 };
 
 const state = {
   assignments: [],
   activeRoles: [],
-  scripts: { orientation: [], intro: [], day: [] },
+  scripts: { orientation: [], intro: [], day: [], night: [] },
   voices: [],
   voiceMap: new Map(),
   nightAudio: null,
+  speechSessionId: 0,
 };
 
 function init() {
@@ -266,10 +311,12 @@ function bindEvents() {
   dom.selectAllRoles.addEventListener("click", () => setRoleCheckboxes(true));
   dom.clearAllRoles.addEventListener("click", () => setRoleCheckboxes(false));
   dom.generateGame.addEventListener("click", handleGenerateGame);
+  dom.revealAllCards.addEventListener("click", revealAllCards);
   dom.hideAllCards.addEventListener("click", hideAllCards);
   dom.playOrientation.addEventListener("click", () => playScript("orientation"));
   dom.playIntro.addEventListener("click", () => playScript("intro"));
   dom.playDay.addEventListener("click", () => playScript("day"));
+  dom.playNightScript.addEventListener("click", () => playScript("night"));
   dom.stopSpeech.addEventListener("click", stopSpeech);
   dom.startNight.addEventListener("click", handleStartNightAudio);
   dom.stopNight.addEventListener("click", stopNightAudio);
@@ -347,16 +394,97 @@ function renderRolePicker() {
     return `
       <div class="role-item">
         <label>
-          <input type="checkbox" value="${role.id}">
-          <span>
-            <span class="role-title">${role.name}</span>
-            <span class="role-summary">${role.summary}</span>
+          <span class="role-check-row">
+            <input type="checkbox" value="${role.id}">
+          </span>
+          <span class="role-content-row">
+            ${renderRoleThumb(role.id, { label: role.name, className: "picker-thumb" })}
+            <span class="role-copy">
+              <span class="role-title">${role.name}</span>
+              <span class="role-summary">${role.summary}</span>
+            </span>
           </span>
         </label>
       </div>
     `;
   }).join("");
   dom.rolesGrid.innerHTML = html;
+  renderRoleIconLegend();
+}
+
+function renderRoleIconLegend() {
+  if (!dom.roleIconLegend) return;
+  const entries = [
+    ...CITIZEN_ROLES.map((role) => ({ id: role.id, name: role.name, team: "citizen" })),
+    { id: BASE_CITIZEN_ROLE.id, name: BASE_CITIZEN_ROLE.name, team: "citizen" },
+    { id: "zombie-leader", name: "Zombie Leader", team: "zombie" },
+  ];
+
+  dom.roleIconLegend.innerHTML = entries
+    .map((entry) => {
+      return `
+        <span class="icon-chip">
+          ${renderRoleThumb(entry.id, {
+            team: entry.team,
+            label: entry.name,
+            className: "icon-chip-thumb",
+          })}
+          <span>${escapeHtml(entry.name)}</span>
+        </span>
+      `;
+    })
+    .join("");
+}
+
+function getRoleIconMeta(roleId, team) {
+  if (roleId && ROLE_ICON_META[roleId]) return ROLE_ICON_META[roleId];
+  if (team === "zombie") return ROLE_ICON_META["zombie-leader"];
+  return ROLE_ICON_META["organizational-citizen"];
+}
+
+function pickRoleIconImage(meta, variantSeed) {
+  if (!meta) return null;
+  const images = Array.isArray(meta.images) ? meta.images.filter(Boolean) : [];
+  if (!images.length) return null;
+  const safeSeed = Math.abs(Number.isFinite(variantSeed) ? Number(variantSeed) : 0);
+  return images[safeSeed % images.length];
+}
+
+function hashString(text) {
+  const input = String(text || "");
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash << 5) - hash + input.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function renderRoleThumb(roleId, options = {}) {
+  const { team = "citizen", label = "", className = "", variantSeed = 0 } = options;
+  const meta = getRoleIconMeta(roleId, team);
+  const title = label || meta.label;
+  const classNames = ["role-thumb"];
+  if (className) classNames.push(className);
+  const imagePath = pickRoleIconImage(meta, variantSeed);
+
+  if (imagePath) {
+    classNames.push("role-thumb-photo");
+    return `<span class="${classNames.join(" ")}" title="${escapeHtml(title)}" aria-hidden="true">
+      <img class="role-thumb-image" src="${escapeHtml(encodeURI(imagePath))}" alt="">
+    </span>`;
+  }
+
+  classNames.push("role-thumb-glyph");
+  return `<span class="${classNames.join(" ")}" style="--thumb-hue:${meta.hue};" title="${escapeHtml(
+    title
+  )}" aria-hidden="true">${meta.symbol || "?"}</span>`;
+}
+
+function renderHiddenThumb(className = "") {
+  const classNames = ["role-thumb", "role-thumb-hidden"];
+  if (className) classNames.push(className);
+  return `<span class="${classNames.join(" ")}" title="Hidden role" aria-hidden="true">?</span>`;
 }
 
 function renderAmbienceOptions() {
@@ -409,7 +537,12 @@ function handleGenerateGame() {
   const zombieCount = Number(dom.zombieCount.value);
   const selectedRoles = getSelectedRoles();
 
-  const validation = validateSetup(providedNames, requestedCount, zombieCount);
+  const validation = validateSetup(
+    providedNames,
+    requestedCount,
+    zombieCount,
+    selectedRoles
+  );
   if (!validation.ok) {
     setSetupStatus(validation.message, true);
     return;
@@ -435,7 +568,7 @@ function handleGenerateGame() {
   setAudioStatus("Scripts are ready.");
 }
 
-function validateSetup(providedNames, requestedCount, zombieCount) {
+function validateSetup(providedNames, requestedCount, zombieCount, selectedRoles) {
   if (!Number.isInteger(requestedCount) || requestedCount < 1 || requestedCount > MAX_PLAYERS) {
     return {
       ok: false,
@@ -460,7 +593,22 @@ function validateSetup(providedNames, requestedCount, zombieCount) {
       message: "Zombie Leaders must be fewer than total number of players.",
     };
   }
+  const citizenSlots = requestedCount - zombieCount;
+  const selectedRoleSlots = expandedRoleCount(selectedRoles);
+  if (selectedRoleSlots > citizenSlots) {
+    return {
+      ok: false,
+      message: `You selected ${selectedRoleSlots} special-role slot(s), but only ${citizenSlots} citizen slot(s) are available. Deselect some roles, reduce Zombie Leaders, or add more players.`,
+    };
+  }
   return { ok: true };
+}
+
+function expandedRoleCount(roles) {
+  return roles.reduce((sum, role) => {
+    const copies = Number.isInteger(role.count) && role.count > 0 ? role.count : 1;
+    return sum + copies;
+  }, 0);
 }
 
 function buildPlayersForGame(providedNames, requestedCount) {
@@ -499,7 +647,12 @@ function buildAssignments(players, zombieCount, selectedRoles) {
   const zombieNames = shuffledPlayers.slice(0, zombieCount);
   const citizenNames = shuffledPlayers.slice(zombieCount);
 
-  const rolePool = shuffle(selectedRoles);
+  const rolePool = shuffle(
+    selectedRoles.flatMap((role) => {
+      const copies = Number.isInteger(role.count) && role.count > 0 ? role.count : 1;
+      return Array.from({ length: copies }, () => role);
+    })
+  );
   const citizenAssignments = citizenNames.map((name, index) => {
     const role = rolePool[index] || BASE_CITIZEN_ROLE;
     return {
@@ -530,97 +683,185 @@ function buildAssignments(players, zombieCount, selectedRoles) {
 }
 
 function buildScripts(assignments, activeRoles) {
-  const totalPlayers = assignments.length;
-  const zombies = assignments.filter((a) => a.team === "zombie").length;
-  const citizens = totalPlayers - zombies;
-  const roleNames = activeRoles.map((r) => r.name);
+  const roleIds = new Set(activeRoles.map((role) => role.id));
+  const hasSycophant = roleIds.has("sycophant");
 
   const orientation = [
-    "Welcome to Zombie Leaders.",
-    `In this game, ${zombies} Zombie Leaders are hidden among ${citizens} Organizational Citizens.`,
-    "Zombie Leaders coordinate at night to eliminate citizens while hiding their identity during the day.",
-    "Citizens collaborate in daylight discussions to identify and remove all Zombie Leaders.",
-    "All roles are secret. Persuasion, careful listening, and evidence-based voting decide the game.",
+    SCRIPT_TEXT.orientation[0],
+    hasSycophant
+      ? SCRIPT_TEXT.orientation[1]
+      : SCRIPT_TEXT.orientation[1]
+          .replace(
+            "[There is also potentially a Sycophant who is aligned with the Zombie Leaders, but who they don’t know about.]",
+            ""
+          )
+          .replace("[and the Sycophant will win too]", "")
+          .replace(/\s{2,}/g, " ")
+          .trim(),
   ];
 
-  if (roleNames.length) {
-    orientation.push(
-      `Special citizen roles in this game are: ${naturalList(roleNames)}.`
+  const orientationRoleLines = [];
+  if (roleIds.has("office-manager")) {
+    orientationRoleLines.push(
+      "We have a great Integrity Officer, who can view one person's CV each morning to see if they are a Zombie Leader."
     );
-    orientation.push(
-      "If you have a special role, use it to increase clarity without revealing yourself too early."
+  }
+  if (roleIds.has("hr-lead")) {
+    orientationRoleLines.push(
+      "We also have a great Personnel Manager who can identify one person every day that they will protect from attack by the Zombie Leaders (but note that they must choose a different person every day)."
     );
-  } else {
-    orientation.push(
-      "No special citizen roles are active this round. Citizens win through collective reasoning alone."
+  }
+  if (roleIds.has("it-specialist")) {
+    orientationRoleLines.push(
+      "We have a very cluey IT Specialist who can hack the IT system twice in the course of the game — once to get rid of someone they suspect of being a Zombie Leader; once to save someone they want to protect from the Zombie Leaders."
+    );
+  }
+  if (roleIds.has("office-matchmaker")) {
+    orientationRoleLines.push(
+      "We have an Office Matchmaker who is keen to cultivate office romance and who is going to weave their magic to make two members of HDC fall in love. This, though, means that if one of these two Lovers leaves the organization (for whatever reason) the other will too."
+    );
+  }
+  if (roleIds.has("union-rep")) {
+    orientationRoleLines.push(
+      "Defending everyone’s rights, we also have some Union Reps. They will be known to each other and will act in solidarity to defend us from the Zombie Leaders. However, because the Zombie Leaders are very vindictive, if the Union Reps ever reveal — or even hint at —their identity they will be instantly dismissed. And if anyone else hints at the Union Reps’ identity they too will be fired."
+    );
+  }
+  if (roleIds.has("training-supervisor")) {
+    orientationRoleLines.push(
+      "We also have a very enthusiastic Training Supervisor. They take their job seriously and every day will be send one person off to complete mandatory training."
+    );
+  }
+  if (roleIds.has("schosshundchen")) {
+    orientationRoleLines.push(
+      "There is also one member of HDC who is the Schoßhündchen (the Boss’s Pet). They are protected by one of the non-zombie senior managers, and this means that they will not lose their position the first time that the Zombie Leaders target them."
+    );
+  }
+  if (roleIds.has("intern")) {
+    orientationRoleLines.push(
+      "Happily, we also have an Intern. Every day they can, if they want, decide to spend time with a Mentor of their choosing. This means that if they are targeted by the Zombie Leaders that night, they won’t be terminated. However, if their mentor is terminated, the intern will be terminated along with them."
+    );
+  }
+  if (roleIds.has("office-gossip")) {
+    orientationRoleLines.push(
+      "We also have a very enthusiastic Office Gossip. They have the dirt on everybody and if they are targeted by the Zombie Leaders they will not necessarily go quietly — and can take someone down with them in retaliation if they so desire."
+    );
+  }
+  if (roleIds.has("social-club-organizer")) {
+    orientationRoleLines.push(
+      "In light of the increasing job demands that the Zombie Leaders are placing on us, we are also lucky to have a Social Club Organizer. In a round of their choosing they can set up a social club for themselves and up to three other people in HDC. Due to the well-evidenced socially curative effects of group memberships, this protects them all from being harmed by the Zombie Leaders in that round."
     );
   }
 
-  const intro = [
-    `Game start. Total players: ${totalPlayers}. Zombie Leaders in play: ${zombies}.`,
-    "Everyone receives a secret role card now. Read it silently and keep your role hidden.",
-    "Zombie Leaders: remember your allies and coordinate subtly.",
-    "Citizens: do not rely on certainty. Build consensus from behavior, statements, and voting patterns.",
-  ];
+  if (orientationRoleLines.length) {
+    orientation.push(orientationRoleLines.join(" "));
+  }
+  orientation.push(SCRIPT_TEXT.orientation[4]);
 
-  if (activeRoles.length) {
-    intro.push("Special role reminders:");
-    activeRoles.forEach((role) => {
-      intro.push(`${role.name}: ${trimDuplicatedRoleName(role.name, role.introCue)}`);
-    });
+  const intro = [];
+  intro.push(
+    hasSycophant
+      ? "The first thing I’d like to do is work out what role everyone has, because, after the last restructure that the Zombie Leaders initiated, everyone — including me — is a lot confused. And because some of this information is secret, I’d also like everyone to close your eyes. First, I’d like the Zombie Leaders to open your eyes and acknowledge each other. You are dirtbags and proud of it. Now please close your eyes and raise one hand. Could the Sycophant also please open your eyes and look at me and take note of the Zombie Leaders with their hands raised. Now please close your eyes and do your worst."
+      : "The first thing I’d like to do is work out what role everyone has, because, after the last restructure that the Zombie Leaders initiated, everyone — including me — is a lot confused. And because some of this information is secret, I’d also like everyone to close your eyes. First, I’d like the Zombie Leaders to open your eyes and acknowledge each other. You are dirtbags and proud of it. Now please close your eyes."
+  );
+
+  if (roleIds.has("office-manager")) {
+    intro.push(
+      "Now could the Integrity Officer open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("hr-lead")) {
+    intro.push(
+      "Now could the Personnel Manager please open your eyes and look at me. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("it-specialist")) {
+    intro.push(
+      "Now IT Specialist open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("training-supervisor")) {
+    intro.push(
+      "Now could the Training Supervisor open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("schosshundchen")) {
+    intro.push(
+      "Now could the Schoßhündchen (Boss’s Pet) open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("social-club-organizer")) {
+    intro.push(
+      "Now could the Social Club Organizer open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("office-gossip")) {
+    intro.push(
+      "Now could the Office Gossip open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("intern")) {
+    intro.push(
+      "Now could the Intern open your eyes and look at me please. Thank you and good luck. Please close your eyes."
+    );
+  }
+  if (roleIds.has("office-matchmaker")) {
+    intro.push(
+      "Now could the Office Matchmaker open your eyes and look at me. Can you point to two people who you would like to fall in love with each other? [Pause] Thank you — you can close your eyes. Now if I tap you on the knee, please open your eyes and gaze upon your new life partner. Your fates will now be inextricably intertwined — so if one of you leaves us, the other will too. [Pause] Now please close your eyes and commit yourselves to a future in which you are bound together in perpetuity."
+    );
+  }
+  if (roleIds.has("union-rep")) {
+    intro.push(
+      "Now could the Union Reps open your eyes and identify each other. You have a difficult job ahead of you and you will need to work as a united force. Your strength lies in your solidarity and your unwavering commitment to the AntiZombie Leadership Alliance. Remember, you are fighting for fairness, for dignity, and for a better future — but you can never speak of this endeavour. Thank you. And now please close your eyes."
+    );
   }
 
-  intro.push("Night will begin after this introduction. Follow facilitator instructions closely.");
+  intro.push(
+    "Finally, could the Organizational citizens please keep your eyes closed and raise your hands so that I can see who you are? Thank you. We are now ready to get to work. This is a new day at Happy Days Corporation and the first thing I’d like you to do is elect a Head of Department. This person is going to be in charge of your meetings and they will also have the deciding vote if any votes are tied — so choose wisely."
+  );
 
   const day = [
-    "Day sequence begins. Everyone opens their eyes.",
-    "Discuss the previous night, identify contradictions, and test suspicious claims.",
-    "Each player should speak before voting begins.",
+    "We would like you to have a discussion to see if there is anyone you would like to remove from the organization because you suspect them of being a Zombie Leader. You can also choose not to remove anyone, but that decision must be unanimous. [Pause for discussion: setting alarm time] Now I know it’s been a long day and that everyone is very tired, but before you go home, we need to make plans for tomorrow. I’d also like you to close your eyes so that we can do this in private.",
   ];
-
-  if (activeRoles.length) {
-    day.push("Special role prompts:");
-    activeRoles.forEach((role) => {
-      day.push(`${role.name}: ${trimDuplicatedRoleName(role.name, role.dayCue)}`);
-    });
+  if (roleIds.has("office-manager")) {
+    day.push(
+      "Integrity Officer please open your eyes and tell me whose CV you would like to take home to have a look at? [Pause] Thank you. Please close your eyes."
+    );
+  }
+  if (roleIds.has("hr-lead")) {
+    day.push(
+      "Personnel Manager please open your eyes and indicate whose career you would like to save from attack by Zombie Leaders tonight. [Pause] Thank you. Please close your eyes."
+    );
+  }
+  if (roleIds.has("it-specialist")) {
+    day.push(
+      "Now IT Specialist please open your eyes and let me know if you would like to use your one chance to save the person who is going to be targeted by the ZLs tonight? Do you want to use your one chance to get rid of someone? [Pause] Thank you. Now please close your eyes."
+    );
   }
 
-  day.push("Facilitator: call for final statements, then conduct a vote to remove one suspect.");
-  day.push("If all Zombie Leaders are eliminated, Citizens win. If zombies equal or outnumber citizens, zombies win.");
+  const night = [SCRIPT_TEXT.night[0]];
+  if (roleIds.has("training-supervisor")) {
+    night.push(SCRIPT_TEXT.night[1]);
+  }
+  if (roleIds.has("social-club-organizer")) {
+    night.push(SCRIPT_TEXT.night[2]);
+  }
+  if (roleIds.has("office-gossip")) {
+    night.push(SCRIPT_TEXT.night[3]);
+  }
+  if (roleIds.has("intern")) {
+    night.push(SCRIPT_TEXT.night[4]);
+  }
+  night.push(SCRIPT_TEXT.night[5]);
+  night.push(SCRIPT_TEXT.night[6]);
+  night.push(SCRIPT_TEXT.night[7]);
+  night.push(SCRIPT_TEXT.night[8]);
+  night.push(SCRIPT_TEXT.night[9]);
 
-  return { orientation, intro, day };
+  return { orientation, intro, day, night };
 }
 
 function buildFallbackScripts() {
-  return {
-    orientation: [
-      "Welcome to Zombie Leaders.",
-      "Role cards are secret. Some players may be Zombie Leaders and others Organizational Citizens.",
-      "Zombie Leaders work together in hidden night phases; citizens collaborate in day phases to identify them.",
-      "Use logic, patterns, and discussion to protect your team.",
-    ],
-    intro: [
-      "Game introduction begins.",
-      "Distribute role cards, ask players to read silently, and keep roles hidden.",
-      "Zombie Leaders should identify each other quietly at the facilitator's signal.",
-      "Citizens should focus on evidence and voting behavior.",
-    ],
-    day: [
-      "Day sequence begins.",
-      "Open discussion: everyone should contribute before voting.",
-      "Facilitator calls final statements and one elimination vote.",
-      "Repeat day and night rounds until one team is eliminated.",
-    ],
-  };
-}
-
-function trimDuplicatedRoleName(roleName, cue) {
-  const rawCue = String(cue || "").trim();
-  if (!roleName || !rawCue) return rawCue;
-  const escapedRole = escapeRegExp(String(roleName).trim());
-  const duplicatePrefix = new RegExp(`^${escapedRole}(?:\\s*[:,-]\\s*|\\s+)`, "i");
-  const cleanedCue = rawCue.replace(duplicatePrefix, "").trim();
-  return cleanedCue || rawCue;
+  return buildScripts([], []);
 }
 
 function renderSummary() {
@@ -637,24 +878,94 @@ function renderSummary() {
   `;
 }
 
+function displayPlayerName(entry, index) {
+  const raw = String(entry?.player ?? "").trim();
+  return raw || `Player ${index + 1}`;
+}
+
+function setAssignmentPlayerName(index, rawName, normalize = false) {
+  const entry = state.assignments[index];
+  if (!entry) return;
+  const next = String(rawName ?? "");
+  if (!normalize) {
+    entry.player = next;
+    return;
+  }
+  const trimmed = next.trim();
+  entry.player = trimmed || `Player ${index + 1}`;
+}
+
+function zombieAlliesText(index) {
+  const entry = state.assignments[index];
+  if (!entry || entry.team !== "zombie") return "No allies";
+  const allies = state.assignments
+    .map((assignment, assignmentIndex) => ({ assignment, assignmentIndex }))
+    .filter(
+      ({ assignment, assignmentIndex }) =>
+        assignment.team === "zombie" && assignmentIndex !== index
+    )
+    .map(({ assignment, assignmentIndex }) =>
+      displayPlayerName(assignment, assignmentIndex)
+    );
+  return allies.length ? naturalList(allies) : "No allies";
+}
+
+function refreshZombieAllyText() {
+  dom.cardsGrid.querySelectorAll("[data-allies-for]").forEach((line) => {
+    const index = Number(line.getAttribute("data-allies-for"));
+    const textNode = line.querySelector("[data-allies-text]");
+    if (!textNode || Number.isNaN(index)) return;
+    textNode.textContent = zombieAlliesText(index);
+  });
+}
+
 function renderCards() {
   const html = state.assignments
     .map((entry, index) => {
+      const visibleName = displayPlayerName(entry, index);
+      const cardVariantSeed = hashString(`${visibleName}|${entry.role.id}`);
       return `
         <article class="card" data-index="${index}">
           <div class="card-header">
-            <h3>${escapeHtml(entry.player)}</h3>
+            <div class="card-header-main">
+              ${renderHiddenThumb("card-thumb card-thumb-hidden")}
+              ${renderRoleThumb(entry.role.id, {
+                team: entry.team,
+                label: entry.role.name,
+                className: "card-thumb card-thumb-revealed",
+                variantSeed: cardVariantSeed,
+              })}
+              <input
+                type="text"
+                class="card-name-input"
+                data-action="edit-name"
+                data-index="${index}"
+                value="${escapeHtml(visibleName)}"
+                placeholder="Player ${index + 1}"
+                aria-label="Player name for card ${index + 1}"
+              >
+            </div>
             <span class="badge hidden">Hidden</span>
           </div>
           <div class="card-details">
             <p><strong>Team:</strong> ${entry.team === "zombie" ? "Zombie Leaders" : "Organizational Citizens"}</p>
-            <p><strong>Role:</strong> ${escapeHtml(entry.role.name)}</p>
+            <p class="card-role-line">
+              <strong>Role:</strong>
+              ${renderRoleThumb(entry.role.id, {
+                team: entry.team,
+                label: entry.role.name,
+                className: "inline-role-thumb",
+                variantSeed: cardVariantSeed,
+              })}
+              <span>${escapeHtml(entry.role.name)}</span>
+            </p>
             <p>${escapeHtml(entry.role.summary)}</p>
             ${
               entry.team === "zombie"
-                ? `<p><strong>Zombie Allies:</strong> ${escapeHtml(
-                    entry.allies.length ? naturalList(entry.allies) : "No allies"
-                  )}</p>`
+                ? `<p data-allies-for="${index}">
+                    <strong>Zombie Allies:</strong>
+                    <span data-allies-text>${escapeHtml(zombieAlliesText(index))}</span>
+                  </p>`
                 : ""
             }
           </div>
@@ -672,6 +983,24 @@ function renderCards() {
       const card = event.currentTarget.closest(".card");
       if (!card) return;
       toggleCard(card);
+    });
+  });
+
+  dom.cardsGrid.querySelectorAll('[data-action="edit-name"]').forEach((input) => {
+    input.addEventListener("input", (event) => {
+      const field = event.currentTarget;
+      const index = Number(field.dataset.index);
+      if (Number.isNaN(index)) return;
+      setAssignmentPlayerName(index, field.value, false);
+      refreshZombieAllyText();
+    });
+    input.addEventListener("blur", (event) => {
+      const field = event.currentTarget;
+      const index = Number(field.dataset.index);
+      if (Number.isNaN(index)) return;
+      setAssignmentPlayerName(index, field.value, true);
+      field.value = state.assignments[index]?.player || "";
+      refreshZombieAllyText();
     });
   });
 }
@@ -711,6 +1040,24 @@ function hideAllCards() {
   });
 }
 
+function revealAllCards() {
+  dom.cardsGrid.querySelectorAll(".card").forEach((card) => {
+    card.classList.add("revealed");
+    const badge = card.querySelector(".badge");
+    const button = card.querySelector('[data-action="toggle"]');
+    const index = Number(card.dataset.index);
+    const entry = state.assignments[index];
+
+    if (badge && entry) {
+      badge.className = `badge ${entry.team}`;
+      badge.textContent = entry.team === "zombie" ? "Zombie" : "Citizen";
+    }
+    if (button) {
+      button.textContent = "Hide";
+    }
+  });
+}
+
 function populateVoiceList() {
   if (!window.speechSynthesis) {
     dom.voiceSelect.innerHTML = `<option value="">Speech not supported</option>`;
@@ -720,6 +1067,7 @@ function populateVoiceList() {
     dom.playOrientation.disabled = true;
     dom.playIntro.disabled = true;
     dom.playDay.disabled = true;
+    dom.playNightScript.disabled = true;
     dom.stopSpeech.disabled = true;
     return;
   }
@@ -857,13 +1205,17 @@ function speakLines(lines, typeLabel) {
   }
 
   stopSpeech();
+  const sessionId = state.speechSessionId;
   const chosenVoice = selectedVoice();
   const rate = Number(dom.voiceRate.value);
   const pitch = Number(dom.voicePitch.value);
   let currentLine = 0;
   let useFallbackVoice = false;
+  const isCurrentSession = () => state.speechSessionId === sessionId;
 
   const speakNext = () => {
+    if (!isCurrentSession()) return;
+
     if (currentLine >= lines.length) {
       setAudioStatus(`${capitalize(typeLabel)} sequence complete.`);
       return;
@@ -882,12 +1234,19 @@ function speakLines(lines, typeLabel) {
     utterance.rate = rate;
     utterance.pitch = pitch;
     utterance.onstart = () => {
+      if (!isCurrentSession()) return;
       setAudioStatus(
         `${capitalize(typeLabel)}: line ${currentLine + 1} of ${lines.length}`
       );
     };
     utterance.onerror = (event) => {
-      const errorName = event?.error || "unknown";
+      if (!isCurrentSession()) return;
+
+      const errorName = String(event?.error || "unknown").toLowerCase();
+      if (errorName === "interrupted" || errorName === "canceled" || errorName === "cancelled") {
+        return;
+      }
+
       if (chosenVoice && !useFallbackVoice) {
         useFallbackVoice = true;
         setAudioStatus(
@@ -900,6 +1259,7 @@ function speakLines(lines, typeLabel) {
       setAudioStatus(`Speech playback failed (${errorName}).`, true);
     };
     utterance.onend = () => {
+      if (!isCurrentSession()) return;
       currentLine += 1;
       speakNext();
     };
@@ -910,7 +1270,8 @@ function speakLines(lines, typeLabel) {
 }
 
 function stopSpeech() {
-  if (window.speechSynthesis?.speaking) {
+  state.speechSessionId += 1;
+  if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) {
     window.speechSynthesis.cancel();
   }
 }
@@ -1724,6 +2085,7 @@ function updateScriptViews() {
   dom.orientationScript.value = formatScript(orientationLines);
   dom.introScript.value = formatScript(state.scripts.intro);
   dom.dayScript.value = formatScript(state.scripts.day);
+  dom.nightScript.value = formatScript(state.scripts.night);
 }
 
 function formatScript(lines = []) {
@@ -1763,10 +2125,6 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
-}
-
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function capitalize(text) {
