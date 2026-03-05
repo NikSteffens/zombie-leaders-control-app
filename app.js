@@ -343,6 +343,7 @@ const state = {
   scriptPendingResume: null,
   completedScriptPlayback: null,
   scriptScrub: null,
+  nightAudioScrub: null,
 };
 
 function init() {
@@ -374,6 +375,11 @@ function bindEvents() {
   dom.pauseNight.addEventListener("click", toggleNightAudioPause);
   dom.ambienceSelect.addEventListener("change", handleAmbienceChange);
   dom.backgroundVolume.addEventListener("input", handleBackgroundVolumeInput);
+  dom.backgroundAudioProgress?.addEventListener("pointerdown", beginNightAudioScrub);
+  dom.backgroundAudioProgress?.addEventListener("pointerup", endNightAudioScrub);
+  dom.backgroundAudioProgress?.addEventListener("pointercancel", endNightAudioScrub);
+  dom.backgroundAudioProgress?.addEventListener("input", handleNightAudioScrubInput);
+  dom.backgroundAudioProgress?.addEventListener("change", endNightAudioScrub);
   dom.zombieCount.addEventListener("input", handleZombieCountInput);
   dom.orientationEnabled.addEventListener("change", handleOrientationToggle);
   dom.voiceRate.addEventListener("input", updateVoiceControlReadouts);
@@ -1126,12 +1132,33 @@ function zombieAlliesText(index) {
   return allies.length ? naturalList(allies) : "No allies";
 }
 
-function refreshZombieAllyText() {
-  dom.cardsGrid.querySelectorAll("[data-allies-for]").forEach((line) => {
-    const index = Number(line.getAttribute("data-allies-for"));
-    const textNode = line.querySelector("[data-allies-text]");
+function unionAlliesText(index) {
+  const entry = state.assignments[index];
+  if (!entry || entry.role?.id !== "union-rep") return "No allies";
+  const allies = state.assignments
+    .map((assignment, assignmentIndex) => ({ assignment, assignmentIndex }))
+    .filter(
+      ({ assignment, assignmentIndex }) =>
+        assignment.role?.id === "union-rep" && assignmentIndex !== index
+    )
+    .map(({ assignment, assignmentIndex }) =>
+      displayPlayerName(assignment, assignmentIndex)
+    );
+  return allies.length ? naturalList(allies) : "No allies";
+}
+
+function refreshCardAllyText() {
+  dom.cardsGrid.querySelectorAll("[data-zombie-allies-for]").forEach((line) => {
+    const index = Number(line.getAttribute("data-zombie-allies-for"));
+    const textNode = line.querySelector("[data-zombie-allies-text]");
     if (!textNode || Number.isNaN(index)) return;
     textNode.textContent = zombieAlliesText(index);
+  });
+  dom.cardsGrid.querySelectorAll("[data-union-allies-for]").forEach((line) => {
+    const index = Number(line.getAttribute("data-union-allies-for"));
+    const textNode = line.querySelector("[data-union-allies-text]");
+    if (!textNode || Number.isNaN(index)) return;
+    textNode.textContent = unionAlliesText(index);
   });
 }
 
@@ -1176,9 +1203,17 @@ function renderCards() {
             <p>${escapeHtml(entry.role.summary)}</p>
             ${
               entry.team === "zombie"
-                ? `<p data-allies-for="${index}">
+                ? `<p data-zombie-allies-for="${index}">
                     <strong>Zombie Allies:</strong>
-                    <span data-allies-text>${escapeHtml(zombieAlliesText(index))}</span>
+                    <span data-zombie-allies-text>${escapeHtml(zombieAlliesText(index))}</span>
+                  </p>`
+                : ""
+            }
+            ${
+              entry.role.id === "union-rep"
+                ? `<p data-union-allies-for="${index}">
+                    <strong>Union Allies:</strong>
+                    <span data-union-allies-text>${escapeHtml(unionAlliesText(index))}</span>
                   </p>`
                 : ""
             }
@@ -1206,7 +1241,7 @@ function renderCards() {
       const index = Number(field.dataset.index);
       if (Number.isNaN(index)) return;
       setAssignmentPlayerName(index, field.value, false);
-      refreshZombieAllyText();
+      refreshCardAllyText();
     });
     input.addEventListener("blur", (event) => {
       const field = event.currentTarget;
@@ -1214,7 +1249,7 @@ function renderCards() {
       if (Number.isNaN(index)) return;
       setAssignmentPlayerName(index, field.value, true);
       field.value = state.assignments[index]?.player || "";
-      refreshZombieAllyText();
+      refreshCardAllyText();
     });
   });
 }
@@ -2152,6 +2187,52 @@ function handleBackgroundVolumeInput() {
   applyBackgroundVolume(state.nightAudio);
 }
 
+function canSeekNightAudio(audioState = state.nightAudio) {
+  const duration = Number(audioState?.audioElement?.duration);
+  return Boolean(audioState?.audioElement && Number.isFinite(duration) && duration > 0);
+}
+
+function beginNightAudioScrub(event) {
+  if (!dom.backgroundAudioProgress) return;
+  state.nightAudioScrub = { pointerId: event?.pointerId ?? null };
+}
+
+function handleNightAudioScrubInput(event) {
+  updateNightAudioScrub(event, { commit: true });
+}
+
+function endNightAudioScrub(event) {
+  if (!dom.backgroundAudioProgress) return;
+  updateNightAudioScrub(event, { commit: true });
+  state.nightAudioScrub = null;
+  syncNightAudioUI();
+}
+
+function updateNightAudioScrub(event, options = {}) {
+  const progressInput = dom.backgroundAudioProgress;
+  if (!progressInput) return;
+
+  const value = Number(event?.currentTarget?.value ?? progressInput.value ?? 0);
+  const max = Number(event?.currentTarget?.max ?? progressInput.max ?? 1000);
+  const ratio = max > 0 ? clamp(value / max, 0, 1) : 0;
+  const progressPct = ratio * 100;
+  progressInput.style.setProperty("--progress-pct", `${progressPct}%`);
+
+  if (!options.commit || !state.nightAudio || !canSeekNightAudio(state.nightAudio)) {
+    return;
+  }
+
+  const duration = Number(state.nightAudio.audioElement?.duration);
+  const targetTime = clamp(duration * ratio, 0, duration);
+  try {
+    state.nightAudio.audioElement.currentTime = targetTime;
+    state.nightAudio.elapsedBeforePauseMs = targetTime * 1000;
+    if (!state.nightAudio.isPaused) {
+      state.nightAudio.startedAt = performance.now();
+    }
+  } catch (_) {}
+}
+
 function startNightAudio(preset) {
   stopSpeech();
   stopNightAudio();
@@ -2366,9 +2447,15 @@ function syncNightAudioUI() {
     }
   }
 
-  const progressPct = clamp(progress, 0, 1) * 100;
-  progressInput.value = String(Math.round(progressPct * 10));
-  progressInput.style.setProperty("--progress-pct", `${progressPct}%`);
+  const seekable = canSeekNightAudio(state.nightAudio);
+  progressInput.disabled = !seekable;
+
+  if (!state.nightAudioScrub) {
+    const progressPct = clamp(progress, 0, 1) * 100;
+    progressInput.value = String(Math.round(progressPct * 10));
+    progressInput.style.setProperty("--progress-pct", `${progressPct}%`);
+  }
+
   progressMeta.textContent = metaText;
 }
 

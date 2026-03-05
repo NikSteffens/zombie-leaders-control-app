@@ -137,6 +137,7 @@ body:not(.locked) .auth-gate {
   font-size: 1.15rem;
   font-weight: 750;
   letter-spacing: 0.05em;
+  margin-bottom: 0.45rem;
   text-shadow: 0 0 12px rgba(198, 27, 45, 0.26);
 }
 
@@ -235,6 +236,16 @@ h3 {
 
 .zombie-count-field {
   flex-basis: 280px;
+}
+
+label[for="zombie-count"] {
+  display: inline-block;
+  margin-top: 0.34rem;
+}
+
+label[for="voice-rate"] {
+  display: inline-block;
+  margin-top: 0.34rem;
 }
 
 .zombie-count-icons {
