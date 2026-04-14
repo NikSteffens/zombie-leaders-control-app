@@ -41,6 +41,17 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "local",
     sourceLabel: "Device voice",
     matcher: /\bdaniel\b/i,
+    fallbackMatchers: [
+      /\bgoogle uk english male\b/i,
+      /\balex\b/i,
+      /\bryan\b/i,
+      /\bdavid\b/i,
+      /\bjames\b/i,
+      /\btom\b/i,
+      /\boliver\b/i,
+      /\barthur\b/i,
+      /\bmale\b/i,
+    ],
     image: "01_thumbnail icons/Departmental Administrator M30.png",
   },
   {
@@ -49,6 +60,18 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "local",
     sourceLabel: "Device voice",
     matcher: /\bsamantha\b/i,
+    fallbackMatchers: [
+      /\bgoogle us english\b/i,
+      /\bkaren\b/i,
+      /\bzira\b/i,
+      /\blibby\b/i,
+      /\bjenny\b/i,
+      /\baria\b/i,
+      /\bava\b/i,
+      /\bsusan\b/i,
+      /\bnatasha\b/i,
+      /\bfemale\b/i,
+    ],
     image: "01_thumbnail icons/Departmental Administrator F30.png",
   },
   {
@@ -57,6 +80,16 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "local",
     sourceLabel: "Device voice",
     matcher: /\bmoira\b/i,
+    fallbackMatchers: [
+      /\bgoogle uk english female\b/i,
+      /\bhazel\b/i,
+      /\bfiona\b/i,
+      /\bserena\b/i,
+      /\bsonia\b/i,
+      /\bcatherine\b/i,
+      /\bneural english female\b/i,
+      /\bfemale\b/i,
+    ],
     image: "01_thumbnail icons/Departmental Administrator F60.png",
   },
 ]);
@@ -701,7 +734,8 @@ function speakShortMessage(message, options = {}) {
 
 function resolveVoiceForId(voiceId) {
   if (!voiceId) return null;
-  return state.voiceMap.get(voiceId) || null;
+  const option = VOICE_OPTIONS.find((entry) => entry.id === voiceId);
+  return resolveUsableVoiceForOption(option);
 }
 
 function handleTimerSirenVolumeInput() {
@@ -1859,13 +1893,10 @@ function populateVoiceList() {
     return;
   }
 
-  state.voiceMap = new Map();
-  VOICE_OPTIONS.filter((option) => option.kind === "local").forEach((option) => {
-    const bestMatch = findVoiceForOption(option, allVoices);
-    if (bestMatch) {
-      state.voiceMap.set(option.id, bestMatch);
-    }
-  });
+  state.voiceMap = buildVoiceAssignments(
+    VOICE_OPTIONS.filter((option) => option.kind === "local"),
+    allVoices
+  );
 
   if (!isVoiceOptionAvailable(selectedVoiceOption())) {
     const firstAvailable = VOICE_OPTIONS.find((option) => isVoiceOptionAvailable(option));
@@ -1882,28 +1913,79 @@ function selectedVoiceOption() {
 }
 
 function selectedLocalVoice() {
-  const option = selectedVoiceOption();
-  if (option.kind !== "local") return null;
-  return state.voiceMap.get(option.id) || null;
+  return resolveUsableVoiceForOption(selectedVoiceOption());
 }
 
-function findVoiceForOption(option, voices) {
-  const exactMatches = voices.filter((voice) => option.matcher.test(voice.name || ""));
-  if (exactMatches.length) {
-    return sortVoicesByQuality(exactMatches)[0];
-  }
+function buildVoiceAssignments(options, voices) {
+  const assignments = new Map();
+  const usableVoices = Array.isArray(voices)
+    ? voices.filter((voice) => voice && (voice.name || voice.voiceURI))
+    : [];
 
-  const fallbackMatches = voices.filter((voice) => {
-    const name = voice.name || "";
-    const lang = normalizeLang(voice.lang);
-    return Boolean(option.fallbackMatcher?.test(name) && option.langMatcher?.test(lang));
+  if (!usableVoices.length) return assignments;
+
+  const preferredPool = filterPreferredVoices(usableVoices);
+  const usedVoiceKeys = new Set();
+
+  options.forEach((option) => {
+    const namedMatch = findVoiceForOption(option, preferredPool, usedVoiceKeys);
+    if (!namedMatch) return;
+    assignments.set(option.id, namedMatch);
+    usedVoiceKeys.add(getVoiceKey(namedMatch));
   });
 
-  if (fallbackMatches.length) {
-    return sortVoicesByQuality(fallbackMatches)[0];
+  const remainingVoices = sortVoicesByQuality(preferredPool).filter(
+    (voice) => !usedVoiceKeys.has(getVoiceKey(voice))
+  );
+
+  options.forEach((option) => {
+    if (assignments.has(option.id)) return;
+    const fallbackVoice = remainingVoices.shift() || pickBestVoice(preferredPool);
+    if (fallbackVoice) {
+      assignments.set(option.id, fallbackVoice);
+    }
+  });
+
+  return assignments;
+}
+
+function findVoiceForOption(option, voices, usedVoiceKeys = new Set()) {
+  const exactMatches = findMatchingVoices(voices, [option.matcher], usedVoiceKeys);
+  if (exactMatches.length) {
+    return exactMatches[0];
+  }
+
+  const namedFallbacks = findMatchingVoices(voices, option.fallbackMatchers || [], usedVoiceKeys);
+  if (namedFallbacks.length) {
+    return namedFallbacks[0];
   }
 
   return null;
+}
+
+function findMatchingVoices(voices, matchers = [], usedVoiceKeys = new Set()) {
+  if (!matchers.length) return [];
+  return sortVoicesByQuality(
+    voices.filter((voice) => {
+      if (usedVoiceKeys.has(getVoiceKey(voice))) return false;
+      const name = voice.name || "";
+      return matchers.some((matcher) => matcher?.test?.(name));
+    })
+  );
+}
+
+function filterPreferredVoices(voices) {
+  const englishVoices = voices.filter((voice) => ENGLISH_LANG_RE.test(normalizeLang(voice.lang)));
+  return englishVoices.length ? englishVoices : voices;
+}
+
+function resolveUsableVoiceForOption(option) {
+  if (!option || option.kind !== "local") return null;
+  return state.voiceMap.get(option.id) || pickBestVoice(state.voices) || null;
+}
+
+function canUseBrowserSpeechFallback() {
+  return Boolean(window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function");
 }
 
 function sortVoicesByQuality(voices) {
@@ -1922,9 +2004,10 @@ function getVoiceScore(voice) {
 
 function pickBestVoice(voices) {
   if (!voices.length) return null;
-  const danielVoice = voices.find((voice) => /\bdaniel\b/i.test(voice.name || ""));
+  const preferredPool = filterPreferredVoices(voices);
+  const danielVoice = preferredPool.find((voice) => /\bdaniel\b/i.test(voice.name || ""));
   if (danielVoice) return danielVoice;
-  return sortVoicesByQuality(voices)[0];
+  return sortVoicesByQuality(preferredPool)[0];
 }
 
 function renderVoiceChoices() {
@@ -1980,7 +2063,7 @@ function renderVoiceChoiceGroup(container) {
 }
 
 function isVoiceOptionAvailable(option) {
-  return Boolean(option && state.voiceMap.has(option.id));
+  return Boolean(option && (resolveUsableVoiceForOption(option) || canUseBrowserSpeechFallback()));
 }
 
 function isSelectedVoiceAvailable() {
@@ -1989,14 +2072,20 @@ function isSelectedVoiceAvailable() {
 
 function getVoiceOptionMeta(option) {
   if (!option) return "";
-  const voice = state.voiceMap.get(option.id);
-  if (!voice) return "Unavailable on this device";
+  const voice = resolveUsableVoiceForOption(option);
+  if (!voice) {
+    return canUseBrowserSpeechFallback() ? "Browser default" : "Unavailable on this device";
+  }
+  if (voice.name && voice.name.toLowerCase() !== option.name.toLowerCase()) {
+    return `${voice.name} · ${voice.lang || "en"}`;
+  }
   return `${voice.lang || "en"}`;
 }
 
 function getVoiceUnavailableReason(option) {
   if (!option) return "Select a voice first.";
-  return "That voice is not available on this computer.";
+  if (!window.speechSynthesis) return "Speech synthesis is not supported in this browser.";
+  return "No compatible text-to-speech voice is available on this computer.";
 }
 
 function getVoiceKey(voice) {
@@ -2126,16 +2215,21 @@ function playScript(type) {
 }
 
 function speakLines(lines, options = {}) {
+  if (!window.speechSynthesis) {
+    setAudioStatus("Speech synthesis is not supported in this browser.", true);
+    return;
+  }
+
+  if (!state.voices.length) {
+    populateVoiceList();
+  }
+
   const voiceOption = selectedVoiceOption();
   if (!isVoiceOptionAvailable(voiceOption)) {
     setAudioStatus(`${voiceOption.name} is not ready yet. ${getVoiceUnavailableReason(voiceOption)}`, true);
     return;
   }
 
-  if (!window.speechSynthesis) {
-    setAudioStatus("Speech synthesis is not supported in this browser.", true);
-    return;
-  }
   speakLinesWithLocalVoice(lines, options, voiceOption);
 }
 
