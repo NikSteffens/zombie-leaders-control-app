@@ -45,7 +45,7 @@
         </div>
       </div>
       <div class="field compact player-names-field">
-        <label for="player-names">Player Names (Optional).<br>If you would like the app to randomly assign roles to players, add player names here. If you want players to physically draw their own role card, leave this blank (you can enter player names later to match the role they drew).</label>
+        <label for="player-names">Player Names (Optional)<br>If you would like the app to randomly assign roles to players, add player names here. If you want players to physically draw their own role card, leave this blank (you can enter player names later to match the role they drew).</label>
         <textarea id="player-names" rows="8" placeholder="Alex&#10;Beth&#10;Cath&#10;(leave blank to auto-create Player 1..N)"></textarea>
       </div>
       <div class="row">
@@ -67,7 +67,7 @@
       </div>
       <p class="hint">
         By default no special roles are selected. If no special roles are assigned, players receive the role
-        "Organizational citizen" with no special abilities. Checked roles will be included in the game that is generated.
+        "Organizational Citizen" with no special abilities. Checked roles will be included in the game that is generated.
       </p>
       <div id="roles-grid" class="roles-grid"></div>
       <div class="actions">
@@ -91,8 +91,8 @@
     <section class="section panel" id="audio-panel">
       <h2>4) Audio Director</h2>
       <div class="night-box">
-        <h3>Background Audio (Masking / Atmosphere)</h3>
-        <p class="hint">Choose one of 5 background sounds. Default is Mozart - Requiem.</p>
+        <h3>Background Audio (Masking / Atmosphere) — for Night Time</h3>
+        <p class="hint">Choose one of 5 background sounds.</p>
         <div class="row">
           <div class="field">
             <select id="ambience-select"></select>
@@ -121,116 +121,373 @@
         >
         <p id="background-audio-progress-meta" class="script-progress-meta">Ready to play.</p>
       </div>
+      <div class="timer-box" id="countdown-timer-box">
+        <h3>Countdown Timer — for Day Time</h3>
+        <p class="hint">Set a timer from 1 to 10 minutes.</p>
+        <div class="flip-clock" aria-live="polite" aria-label="Countdown timer display">
+          <div class="flip-digit" aria-hidden="true"><span class="flip-digit-value" data-timer-digit="m1">0</span></div>
+          <div class="flip-digit" aria-hidden="true"><span class="flip-digit-value" data-timer-digit="m2">5</span></div>
+          <div class="flip-separator" aria-hidden="true">:</div>
+          <div class="flip-digit" aria-hidden="true"><span class="flip-digit-value" data-timer-digit="s1">0</span></div>
+          <div class="flip-digit" aria-hidden="true"><span class="flip-digit-value" data-timer-digit="s2">0</span></div>
+        </div>
+        <div class="row timer-control-row">
+          <div class="field compact">
+            <label for="countdown-minutes">Countdown Length</label>
+            <input id="countdown-minutes" type="range" min="1" max="10" step="1" value="5">
+            <p id="countdown-minutes-value" class="control-value">5 minutes</p>
+          </div>
+          <div class="field compact">
+            <label for="timer-siren-volume">Siren Volume</label>
+            <input id="timer-siren-volume" type="range" min="0" max="100" step="5" value="100">
+            <p id="timer-siren-volume-value" class="control-value">100%</p>
+          </div>
+        </div>
+        <fieldset class="warning-options">
+          <legend>Timer Warnings</legend>
+          <label class="warning-option">
+            <input type="checkbox" value="60" checked>
+            <span>60 seconds left</span>
+          </label>
+          <label class="warning-option">
+            <input type="checkbox" value="30">
+            <span>30 seconds left</span>
+          </label>
+          <label class="warning-option">
+            <input type="checkbox" value="20">
+            <span>20 seconds left</span>
+          </label>
+          <label class="warning-option">
+            <input type="checkbox" value="10" checked>
+            <span>10 seconds left</span>
+          </label>
+        </fieldset>
+        <div class="row">
+          <div class="field compact">
+            <label>Warning Voice</label>
+            <div id="timer-voice-choices" class="button-group timer-voice-choices" role="group" aria-label="Timer warning voice">
+              <button type="button" data-timer-voice-id="samantha">Samantha</button>
+              <button type="button" data-timer-voice-id="daniel">Daniel</button>
+            </div>
+          </div>
+        </div>
+        <div class="row audio-controls script-actions timer-actions">
+          <button id="start-timer" type="button" class="danger">&#9654; Start Timer</button>
+          <button id="pause-timer" type="button" class="ghost">&#9208; Pause</button>
+          <button id="reset-timer" type="button" class="ghost">Reset</button>
+          <button id="play-siren-demo" type="button" class="ghost">&#9654; Play Siren Demo</button>
+          <button id="stop-siren" type="button" class="ghost">Stop Siren</button>
+        </div>
+        <p id="timer-status" class="script-progress-meta timer-status">Ready at 5:00.</p>
+      </div>
 
-      <div class="row">
-        <div class="field compact">
-          <label for="voice-rate">Voice Speed</label>
-          <input id="voice-rate" type="range" min="0.6" max="1.8" step="0.1" value="1">
-          <p id="voice-rate-value" class="control-value">1.00x</p>
+      <div class="narration-box">
+        <h3>Narration</h3>
+        <div class="row">
+          <div class="field">
+            <label>Voices</label>
+            <div id="voice-choices" class="voice-choices" role="group" aria-label="Available voices"></div>
+          </div>
+          <div class="button-group voice-tools">
+            <button id="test-voice" type="button">Test Voice</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field compact">
+            <label for="voice-rate">Voice Speed</label>
+            <input id="voice-rate" type="range" min="0.6" max="1.8" step="0.1" value="1">
+            <p id="voice-rate-value" class="control-value">1.00x</p>
+          </div>
+          <div class="field compact">
+            <label for="voice-volume">Volume</label>
+            <input id="voice-volume" type="range" min="0" max="100" step="5" value="100">
+            <p id="voice-volume-value" class="control-value">100%</p>
+          </div>
+        </div>
+        <p id="audio-status" class="status" aria-live="polite"></p>
+
+        <div class="row">
+          <label class="switch">
+            <input id="orientation-enabled" type="checkbox" checked>
+            <span>Include Orientation (for first-time players)</span>
+          </label>
+        </div>
+
+        <div class="script-grid narration-script-grid">
+          <div class="script-box" data-script-panel="orientation" data-script-theme="orientation" data-script-usage="one-time">
+            <div class="script-box-head">
+              <div class="script-title-row">
+                <div class="script-title">
+                  <span class="script-icon" aria-hidden="true">🧭</span>
+                  <h3>Orientation</h3>
+                </div>
+                <span class="script-badge">One-time setup</span>
+              </div>
+              <div class="button-group script-actions">
+                <button type="button" data-script-action="play" data-script="orientation">&#9654; Play</button>
+                <button type="button" data-script-action="pause" data-script="orientation" class="ghost">&#9208; Pause</button>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Orientation script progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="orientation-script" rows="4" readonly></textarea>
+          </div>
+          <div class="script-box" data-script-panel="intro" data-script-theme="intro" data-script-usage="one-time">
+            <div class="script-box-head">
+              <div class="script-title-row">
+                <div class="script-title">
+                  <span class="script-icon" aria-hidden="true">🔑</span>
+                  <h3>Introduction</h3>
+                </div>
+                <span class="script-badge">One-time setup</span>
+              </div>
+              <div class="button-group script-actions">
+                <button type="button" data-script-action="play" data-script="intro">&#9654; Play</button>
+                <button type="button" data-script-action="pause" data-script="intro" class="ghost">&#9208; Pause</button>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Introduction script progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="intro-script" rows="4" readonly></textarea>
+          </div>
+          <div class="script-box" data-script-panel="day" data-script-theme="day" data-script-usage="recurring">
+            <div class="script-box-head">
+              <div class="script-title-row">
+                <div class="script-title">
+                  <span class="script-icon" aria-hidden="true">☀️</span>
+                  <h3>Day Sequence</h3>
+                </div>
+                <span class="script-badge">Recurring scripts</span>
+              </div>
+              <div class="button-group script-actions">
+                <button type="button" data-script-action="play" data-script="day">&#9654; Play</button>
+                <button type="button" data-script-action="pause" data-script="day" class="ghost">&#9208; Pause</button>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Day sequence script progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="day-script" rows="4" readonly></textarea>
+          </div>
+          <div class="script-box" data-script-panel="night" data-script-theme="night" data-script-usage="recurring">
+            <div class="script-box-head">
+              <div class="script-title-row">
+                <div class="script-title">
+                  <span class="script-icon" aria-hidden="true">🌙</span>
+                  <h3>Night Sequence</h3>
+                </div>
+                <span class="script-badge">Recurring scripts</span>
+              </div>
+              <div class="button-group script-actions">
+                <button type="button" data-script-action="play" data-script="night">&#9654; Play</button>
+                <button type="button" data-script-action="pause" data-script="night" class="ghost">&#9208; Pause</button>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Night sequence script progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="night-script" rows="4" readonly></textarea>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="field">
-          <label>Voices</label>
-          <div id="voice-choices" class="voice-choices" role="group" aria-label="Available voices"></div>
-        </div>
-        <div class="button-group voice-tools">
-          <button id="test-voice" type="button">Test Voice</button>
-        </div>
-      </div>
-      <p id="audio-status" class="status" aria-live="polite"></p>
+    </section>
 
-      <div class="row">
-        <label class="switch">
-          <input id="orientation-enabled" type="checkbox" checked>
-          <span>Include Orientation (for first-time players)</span>
-        </label>
-      </div>
-
-      <div class="script-grid">
-        <div class="script-box" data-script-panel="orientation">
-          <div class="script-box-head">
-            <h3>Orientation Script</h3>
-            <div class="button-group script-actions">
-              <button type="button" data-script-action="play" data-script="orientation">&#9654; Play</button>
-              <button type="button" data-script-action="pause" data-script="orientation" class="ghost">&#9208; Pause</button>
-            </div>
+    <section class="section panel" id="lessons-panel">
+      <h2>5) Key Takeaways</h2>
+      <div class="lessons-box">
+        <p class="hint">Here are six key takeaways from the game.</p>
+        <div class="row">
+          <div class="field">
+            <label>Voices</label>
+            <div id="lessons-voice-choices" class="voice-choices" role="group" aria-label="Available lesson voices"></div>
           </div>
-          <input
-            class="script-progress"
-            data-script-progress-input
-            type="range"
-            min="0"
-            max="1000"
-            value="0"
-            step="1"
-            aria-label="Orientation script progress"
-          >
-          <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-          <textarea id="orientation-script" rows="8" readonly></textarea>
         </div>
-        <div class="script-box" data-script-panel="intro">
-          <div class="script-box-head">
-            <h3>Introduction Script</h3>
-            <div class="button-group script-actions">
-              <button type="button" data-script-action="play" data-script="intro">&#9654; Play</button>
-              <button type="button" data-script-action="pause" data-script="intro" class="ghost">&#9208; Pause</button>
-            </div>
+        <div class="row">
+          <div class="field compact">
+            <label for="lessons-voice-rate">Voice Speed</label>
+            <input id="lessons-voice-rate" type="range" min="0.6" max="1.8" step="0.1" value="1">
+            <p id="lessons-voice-rate-value" class="control-value">1.00x</p>
           </div>
-          <input
-            class="script-progress"
-            data-script-progress-input
-            type="range"
-            min="0"
-            max="1000"
-            value="0"
-            step="1"
-            aria-label="Introduction script progress"
-          >
-          <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-          <textarea id="intro-script" rows="8" readonly></textarea>
+          <div class="field compact">
+            <label for="lessons-voice-volume">Volume</label>
+            <input id="lessons-voice-volume" type="range" min="0" max="100" step="5" value="100">
+            <p id="lessons-voice-volume-value" class="control-value">100%</p>
+          </div>
         </div>
-        <div class="script-box" data-script-panel="day">
-          <div class="script-box-head">
-            <h3>Day Sequence Script</h3>
-            <div class="button-group script-actions">
-              <button type="button" data-script-action="play" data-script="day">&#9654; Play</button>
-              <button type="button" data-script-action="pause" data-script="day" class="ghost">&#9208; Pause</button>
+        <p id="lessons-audio-status" class="status" aria-live="polite"></p>
+        <div class="script-grid lessons-grid">
+          <div class="script-box lesson-card" data-script-panel="lesson1" data-lesson-number="1">
+            <div class="script-box-head lesson-card-head">
+              <div class="lesson-card-title">
+                <span class="lesson-number" aria-hidden="true">1</span>
+                <div class="button-group script-actions lesson-actions">
+                  <button type="button" data-script-action="play" data-script="lesson1">&#9654; Play</button>
+                  <button type="button" data-script-action="pause" data-script="lesson1" class="ghost">&#9208; Pause</button>
+                </div>
+              </div>
             </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Lesson 1 progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="lesson1-script" rows="6" readonly></textarea>
           </div>
-          <input
-            class="script-progress"
-            data-script-progress-input
-            type="range"
-            min="0"
-            max="1000"
-            value="0"
-            step="1"
-            aria-label="Day sequence script progress"
-          >
-          <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-          <textarea id="day-script" rows="8" readonly></textarea>
-        </div>
-        <div class="script-box" data-script-panel="night">
-          <div class="script-box-head">
-            <h3>Night Sequence Script</h3>
-            <div class="button-group script-actions">
-              <button type="button" data-script-action="play" data-script="night">&#9654; Play</button>
-              <button type="button" data-script-action="pause" data-script="night" class="ghost">&#9208; Pause</button>
+          <div class="script-box lesson-card" data-script-panel="lesson2" data-lesson-number="2">
+            <div class="script-box-head lesson-card-head">
+              <div class="lesson-card-title">
+                <span class="lesson-number" aria-hidden="true">2</span>
+                <div class="button-group script-actions lesson-actions">
+                  <button type="button" data-script-action="play" data-script="lesson2">&#9654; Play</button>
+                  <button type="button" data-script-action="pause" data-script="lesson2" class="ghost">&#9208; Pause</button>
+                </div>
+              </div>
             </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Lesson 2 progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="lesson2-script" rows="6" readonly></textarea>
           </div>
-          <input
-            class="script-progress"
-            data-script-progress-input
-            type="range"
-            min="0"
-            max="1000"
-            value="0"
-            step="1"
-            aria-label="Night sequence script progress"
-          >
-          <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-          <textarea id="night-script" rows="8" readonly></textarea>
+          <div class="script-box lesson-card" data-script-panel="lesson3" data-lesson-number="3">
+            <div class="script-box-head lesson-card-head">
+              <div class="lesson-card-title">
+                <span class="lesson-number" aria-hidden="true">3</span>
+                <div class="button-group script-actions lesson-actions">
+                  <button type="button" data-script-action="play" data-script="lesson3">&#9654; Play</button>
+                  <button type="button" data-script-action="pause" data-script="lesson3" class="ghost">&#9208; Pause</button>
+                </div>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Lesson 3 progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="lesson3-script" rows="6" readonly></textarea>
+          </div>
+          <div class="script-box lesson-card" data-script-panel="lesson4" data-lesson-number="4">
+            <div class="script-box-head lesson-card-head">
+              <div class="lesson-card-title">
+                <span class="lesson-number" aria-hidden="true">4</span>
+                <div class="button-group script-actions lesson-actions">
+                  <button type="button" data-script-action="play" data-script="lesson4">&#9654; Play</button>
+                  <button type="button" data-script-action="pause" data-script="lesson4" class="ghost">&#9208; Pause</button>
+                </div>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Lesson 4 progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="lesson4-script" rows="6" readonly></textarea>
+          </div>
+          <div class="script-box lesson-card" data-script-panel="lesson5" data-lesson-number="5">
+            <div class="script-box-head lesson-card-head">
+              <div class="lesson-card-title">
+                <span class="lesson-number" aria-hidden="true">5</span>
+                <div class="button-group script-actions lesson-actions">
+                  <button type="button" data-script-action="play" data-script="lesson5">&#9654; Play</button>
+                  <button type="button" data-script-action="pause" data-script="lesson5" class="ghost">&#9208; Pause</button>
+                </div>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Lesson 5 progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="lesson5-script" rows="6" readonly></textarea>
+          </div>
+          <div class="script-box lesson-card" data-script-panel="lesson6" data-lesson-number="6">
+            <div class="script-box-head lesson-card-head">
+              <div class="lesson-card-title">
+                <span class="lesson-number" aria-hidden="true">6</span>
+                <div class="button-group script-actions lesson-actions">
+                  <button type="button" data-script-action="play" data-script="lesson6">&#9654; Play</button>
+                  <button type="button" data-script-action="pause" data-script="lesson6" class="ghost">&#9208; Pause</button>
+                </div>
+              </div>
+            </div>
+            <input
+              class="script-progress"
+              data-script-progress-input
+              type="range"
+              min="0"
+              max="1000"
+              value="0"
+              step="1"
+              aria-label="Lesson 6 progress"
+            >
+            <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
+            <textarea id="lesson6-script" rows="6" readonly></textarea>
+          </div>
         </div>
       </div>
     </section>
@@ -244,7 +501,7 @@
           height="221"
         >
       </div>
-      <p>Copyright &copy; 2026 Nik Steffens and Alex Haslam. All rights reserved.</p>
+      <p>Copyright &copy; 2026 Nik Steffens, Alex Haslam, Tarli Young, and Blake McMillan. All rights reserved.</p>
       <p>Zombie Leaders game materials, scripts, interface, thumbnails, and source code may not be reproduced, redistributed, or adapted without permission.</p>
     </footer>
   </main>

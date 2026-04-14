@@ -7,16 +7,32 @@ const PREFERRED_ENGLISH_LANGS = ["en-AU", "en-GB", "en-US"];
 const ACCESS_CODE = "runaway";
 const ACCESS_SESSION_KEY = "zombie-leaders-unlocked";
 const DEFAULT_AMBIENCE_ID = "mozart-requiem";
-const SCRIPT_VOICE_VOLUME = 1;
 const DEFAULT_BACKGROUND_AUDIO_VOLUME_RATIO = 0.5;
+const DEFAULT_NARRATION_VOLUME_RATIO = 1;
+const MIN_COUNTDOWN_MINUTES = 1;
+const MAX_COUNTDOWN_MINUTES = 10;
+const DEFAULT_COUNTDOWN_MINUTES = 5;
+const DEFAULT_TIMER_WARNING_SECONDS = Object.freeze([60, 10]);
+const TIMER_WARNING_OPTIONS = Object.freeze([60, 30, 20, 10]);
+const DEFAULT_TIMER_SIREN_VOLUME_RATIO = 1;
+const DEFAULT_TIMER_WARNING_VOICE_ID = "samantha";
+const DEFAULT_TIMER_WARNING_RATE = 0.8;
 const SCRIPT_PAUSE_MARKER = "__SCRIPT_PAUSE__";
 const SCRIPT_PAUSE_2S_MARKER = "__SCRIPT_PAUSE_2S__";
 const SCRIPT_TYPES = ["orientation", "intro", "day", "night"];
+const LESSON_TYPES = ["lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6"];
+const PANEL_TYPES = [...SCRIPT_TYPES, ...LESSON_TYPES];
 const SCRIPT_LABELS = Object.freeze({
   orientation: "Orientation",
   intro: "Introduction",
   day: "Day Sequence",
   night: "Night Sequence",
+  lesson1: "Lesson 1",
+  lesson2: "Lesson 2",
+  lesson3: "Lesson 3",
+  lesson4: "Lesson 4",
+  lesson5: "Lesson 5",
+  lesson6: "Lesson 6",
 });
 const VOICE_OPTIONS = Object.freeze([
   {
@@ -268,6 +284,13 @@ const SCRIPT_TEXT = {
   ],
   day: [
     "We would like you to have a discussion to see if there is anyone you would like to remove from the organization because you suspect them of being a Zombie Leader. You can also choose not to remove anyone, but that decision must be unanimous. This will be the last thing we do today before we go to bed.",
+    "Now I know it’s been a long day and that everyone is very tired, but before you go home we need to make plans for tomorrow. I’d also like you to close your eyes so that we can do this in private.",
+    "Integrity Officer please open your eyes and tell me whose CV you would like to take home to have a look at.",
+    "Thank you. Please close your eyes.",
+    "Personnel Manager please open your eyes and indicate whose career you would like to save from attack by Zombie Leaders tonight.",
+    "Thank you. Please close your eyes.",
+    "Now IT Specialist please open your eyes and let me know if you would like to use your one chance to save the person who is going to be targeted by the Zombie Leaders tonight. Do you want to use your one chance to get rid of someone?",
+    "Thank you. Now please close your eyes.",
   ],
   night: [
     "The day has faded into night.",
@@ -287,6 +310,27 @@ const SCRIPT_TEXT = {
     "Now everyone, enjoy the rest of the night.",
   ],
 };
+
+const LESSON_TEXT = Object.freeze({
+  lesson1: [
+    "Standard models of human psychology don’t tell us what we really need to know. In particular, knowing a lot about someone’s personality, e.g., whether they are conscientious, extraverted or agreeable, doesn’t help us understand how they are going to behave in a complex organizational system that is characterised — as most are — by group division and asymmetric access to information.",
+  ],
+  lesson2: [
+    "Reliance on zombie leadership models leads us astray. In particular, belief in great men (or women) will typically mean that we end up listening to the wrong people, while failing to heed the urgings of the ordinary group members we should really be attending to.",
+  ],
+  lesson3: [
+    "The most reliable predictor of behaviour is a person’s social identity and the motivations this creates. As is true in a range of social and organizational contexts, people’s behaviour is driven by the group they identify with and the needs and priorities of that group in the situation at hand. What someone is like as an individual is secondary to this. What we need to discover (but struggle to discern — and hence the appeal of the game) is what group a person identifies with. Once we know this, we understand everything. But usually too late.",
+  ],
+  lesson4: [
+    "Note that the Sycophant is particularly instructive in pointing to the important difference between a psychological group and a sociological group (a group we identify with vs. a group we are simply a member of). The Sycophant is an Organizational Citizen but they identify with the Zombie Leaders, and it is their identification with the Zombie Leaders that ultimately shapes their behaviour.",
+  ],
+  lesson5: [
+    "The machinations of social identity are hard to predict. Even if we know what group someone identifies with, we can’t predict what they are going to do unless we can anticipate the situation that they and their group are going to find themselves in. Mapping these situations and their implications is therefore a priority for psychological analysis.",
+  ],
+  lesson6: [
+    "Being right is not enough. In psychology, as in science, we often imagine that all we need to do is know the truth and be right. But this is never enough to influence others and change the world in the ways we and the groups we identify with want it to change. To do this, we need to persuade others that we are right while also protecting ourselves against the groups who are threatened by our knowledge.",
+  ],
+});
 
 const dom = {
   authGate: document.getElementById("auth-gate"),
@@ -308,6 +352,18 @@ const dom = {
   revealAllCards: document.getElementById("reveal-all-cards"),
   hideAllCards: document.getElementById("hide-all-cards"),
   orientationEnabled: document.getElementById("orientation-enabled"),
+  countdownTimerBox: document.getElementById("countdown-timer-box"),
+  countdownMinutes: document.getElementById("countdown-minutes"),
+  countdownMinutesValue: document.getElementById("countdown-minutes-value"),
+  startTimer: document.getElementById("start-timer"),
+  pauseTimer: document.getElementById("pause-timer"),
+  resetTimer: document.getElementById("reset-timer"),
+  timerSirenVolume: document.getElementById("timer-siren-volume"),
+  timerSirenVolumeValue: document.getElementById("timer-siren-volume-value"),
+  playSirenDemo: document.getElementById("play-siren-demo"),
+  stopSiren: document.getElementById("stop-siren"),
+  timerStatus: document.getElementById("timer-status"),
+  timerVoiceChoices: document.getElementById("timer-voice-choices"),
   startNight: document.getElementById("start-night"),
   pauseNight: document.getElementById("pause-night"),
   ambienceSelect: document.getElementById("ambience-select"),
@@ -317,15 +373,27 @@ const dom = {
   backgroundAudioProgressMeta: document.getElementById("background-audio-progress-meta"),
   voiceRate: document.getElementById("voice-rate"),
   voiceRateValue: document.getElementById("voice-rate-value"),
+  voiceVolume: document.getElementById("voice-volume"),
+  voiceVolumeValue: document.getElementById("voice-volume-value"),
   voiceChoices: document.getElementById("voice-choices"),
+  lessonsVoiceRate: document.getElementById("lessons-voice-rate"),
+  lessonsVoiceRateValue: document.getElementById("lessons-voice-rate-value"),
+  lessonsVoiceVolume: document.getElementById("lessons-voice-volume"),
+  lessonsVoiceVolumeValue: document.getElementById("lessons-voice-volume-value"),
+  lessonsVoiceChoices: document.getElementById("lessons-voice-choices"),
   testVoice: document.getElementById("test-voice"),
   audioStatus: document.getElementById("audio-status"),
+  lessonsAudioStatus: document.getElementById("lessons-audio-status"),
   orientationScript: document.getElementById("orientation-script"),
   introScript: document.getElementById("intro-script"),
   dayScript: document.getElementById("day-script"),
   nightScript: document.getElementById("night-script"),
 };
 dom.scriptPanels = buildScriptPanelDom();
+dom.timerDigits = Object.fromEntries(
+  ["m1", "m2", "s1", "s2"].map((id) => [id, document.querySelector(`[data-timer-digit="${id}"]`)])
+);
+dom.timerWarningInputs = Array.from(document.querySelectorAll(".warning-options input[type=\"checkbox\"]"));
 
 const state = {
   assignments: [],
@@ -336,6 +404,7 @@ const state = {
   selectedVoiceId: "daniel",
   zombieLeaderSelection: Array.from({ length: MAX_ZOMBIES }, (_, index) => index < 3),
   backgroundVolumeRatio: DEFAULT_BACKGROUND_AUDIO_VOLUME_RATIO,
+  narrationVolumeRatio: DEFAULT_NARRATION_VOLUME_RATIO,
   nightAudio: null,
   speechSessionId: 0,
   unionRepCount: MIN_UNION_REPS,
@@ -344,6 +413,19 @@ const state = {
   completedScriptPlayback: null,
   scriptScrub: null,
   nightAudioScrub: null,
+  timer: {
+    durationMinutes: DEFAULT_COUNTDOWN_MINUTES,
+    remainingMs: DEFAULT_COUNTDOWN_MINUTES * 60 * 1000,
+    targetTimeMs: 0,
+    intervalId: 0,
+    isRunning: false,
+    warningSeconds: new Set(DEFAULT_TIMER_WARNING_SECONDS),
+    firedWarnings: new Set(),
+    voiceId: DEFAULT_TIMER_WARNING_VOICE_ID,
+  },
+  timerSiren: null,
+  timerSirenVolumeRatio: DEFAULT_TIMER_SIREN_VOLUME_RATIO,
+  timerDemoTimeoutId: 0,
 };
 
 function init() {
@@ -351,6 +433,11 @@ function init() {
   renderRolePicker();
   renderAmbienceOptions();
   bindEvents();
+  updateTimerDurationReadout();
+  syncTimerWarningAvailability();
+  renderTimerVoiceChoices();
+  updateTimerSirenVolumeReadout();
+  syncCountdownTimerUI();
   updateNightAudioButton();
   syncNightAudioUI();
   updateBackgroundVolumeReadout();
@@ -371,6 +458,26 @@ function bindEvents() {
   dom.revealAllCards.addEventListener("click", revealAllCards);
   dom.hideAllCards.addEventListener("click", hideAllCards);
   bindScriptPanelEvents();
+  dom.countdownMinutes?.addEventListener("input", handleTimerDurationInput);
+  dom.startTimer?.addEventListener("click", startCountdownTimer);
+  dom.pauseTimer?.addEventListener("click", toggleCountdownTimerPause);
+  dom.resetTimer?.addEventListener("click", resetCountdownTimer);
+  dom.timerSirenVolume?.addEventListener("input", handleTimerSirenVolumeInput);
+  dom.playSirenDemo?.addEventListener("click", playTimerSirenDemo);
+  dom.stopSiren?.addEventListener("click", () => stopTimerSiren());
+  dom.timerWarningInputs.forEach((input) => {
+    input.addEventListener("change", handleTimerWarningChange);
+  });
+  dom.timerVoiceChoices?.querySelectorAll("[data-timer-voice-id]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const voiceId = button.dataset.timerVoiceId;
+      if (!voiceId) return;
+      state.timer.voiceId = voiceId;
+      renderTimerVoiceChoices();
+      const label = voiceId === "daniel" ? "Daniel" : "Samantha";
+      setTimerStatus(`Warning voice set to ${label}.`);
+    });
+  });
   dom.startNight.addEventListener("click", handlePlayNightAudio);
   dom.pauseNight.addEventListener("click", toggleNightAudioPause);
   dom.ambienceSelect.addEventListener("change", handleAmbienceChange);
@@ -382,13 +489,399 @@ function bindEvents() {
   dom.backgroundAudioProgress?.addEventListener("change", endNightAudioScrub);
   dom.zombieCount.addEventListener("input", handleZombieCountInput);
   dom.orientationEnabled.addEventListener("change", handleOrientationToggle);
-  dom.voiceRate.addEventListener("input", updateVoiceControlReadouts);
+  dom.voiceRate?.addEventListener("input", handleVoiceRateInput);
+  dom.lessonsVoiceRate?.addEventListener("input", handleVoiceRateInput);
+  dom.voiceVolume?.addEventListener("input", handleVoiceVolumeInput);
+  dom.lessonsVoiceVolume?.addEventListener("input", handleVoiceVolumeInput);
   dom.testVoice.addEventListener("click", handleTestVoice);
   window.speechSynthesis?.addEventListener?.("voiceschanged", populateVoiceList);
   window.addEventListener("beforeunload", () => {
     stopSpeech();
+    stopCountdownTimer({ keepRemaining: true });
+    stopTimerSiren({ silent: true });
     stopNightAudio();
   });
+}
+
+function handleTimerDurationInput() {
+  if (!dom.countdownMinutes) return;
+  const nextMinutes = clamp(
+    Number(dom.countdownMinutes.value) || DEFAULT_COUNTDOWN_MINUTES,
+    MIN_COUNTDOWN_MINUTES,
+    MAX_COUNTDOWN_MINUTES
+  );
+  dom.countdownMinutes.value = String(nextMinutes);
+  state.timer.durationMinutes = nextMinutes;
+  updateTimerDurationReadout();
+  syncTimerWarningAvailability();
+
+  if (state.timer.isRunning) return;
+
+  state.timer.remainingMs = nextMinutes * 60 * 1000;
+  state.timer.firedWarnings = new Set();
+  stopTimerSiren({ silent: true });
+  syncCountdownTimerUI();
+  setTimerStatus(`Ready at ${formatCountdownClock(state.timer.remainingMs)}.`);
+}
+
+function updateTimerDurationReadout() {
+  if (!dom.countdownMinutesValue || !dom.countdownMinutes) return;
+  const minutes = clamp(
+    Number(dom.countdownMinutes.value) || state.timer.durationMinutes || DEFAULT_COUNTDOWN_MINUTES,
+    MIN_COUNTDOWN_MINUTES,
+    MAX_COUNTDOWN_MINUTES
+  );
+  dom.countdownMinutesValue.textContent = `${minutes} minute${minutes === 1 ? "" : "s"}`;
+}
+
+function handleTimerWarningChange() {
+  const nextWarnings = new Set(
+    dom.timerWarningInputs
+      .filter((input) => input.checked)
+      .map((input) => Number(input.value))
+      .filter((seconds) => TIMER_WARNING_OPTIONS.includes(seconds))
+  );
+  state.timer.warningSeconds = nextWarnings;
+}
+
+function renderTimerVoiceChoices() {
+  if (!dom.timerVoiceChoices) return;
+  dom.timerVoiceChoices.querySelectorAll("[data-timer-voice-id]").forEach((button) => {
+    const voiceId = button.dataset.timerVoiceId;
+    const isActive = voiceId === state.timer.voiceId;
+    const isAvailable = isVoiceOptionAvailable(VOICE_OPTIONS.find((option) => option.id === voiceId));
+    button.classList.toggle("active", isActive);
+    button.classList.toggle("unavailable", !isAvailable);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    button.disabled = false;
+  });
+}
+
+function syncTimerWarningAvailability() {
+  const enableSixtySecondWarning = state.timer.durationMinutes >= 2;
+  const sixtySecondInput = dom.timerWarningInputs.find((input) => Number(input.value) === 60);
+  if (!sixtySecondInput) {
+    handleTimerWarningChange();
+    return;
+  }
+
+  sixtySecondInput.disabled = !enableSixtySecondWarning;
+  sixtySecondInput.closest(".warning-option")?.classList.toggle("disabled", !enableSixtySecondWarning);
+  if (!enableSixtySecondWarning) {
+    sixtySecondInput.checked = false;
+  }
+  handleTimerWarningChange();
+}
+
+function startCountdownTimer() {
+  if (state.timer.isRunning) return;
+
+  const fullDurationMs = state.timer.durationMinutes * 60 * 1000;
+  const wasPaused = state.timer.remainingMs > 0 && state.timer.remainingMs < fullDurationMs;
+  if (state.timer.remainingMs <= 0) {
+    state.timer.remainingMs = fullDurationMs;
+    state.timer.firedWarnings = new Set();
+  }
+
+  stopTimerSiren({ silent: true });
+  window.clearInterval(state.timer.intervalId);
+  state.timer.targetTimeMs = Date.now() + state.timer.remainingMs;
+  state.timer.intervalId = window.setInterval(tickCountdownTimer, 120);
+  state.timer.isRunning = true;
+  syncCountdownTimerUI();
+  tickCountdownTimer();
+  setTimerStatus(wasPaused ? "Timer resumed." : `Timer started for ${formatCountdownClock(fullDurationMs)}.`);
+}
+
+function toggleCountdownTimerPause() {
+  if (state.timer.isRunning) {
+    pauseCountdownTimer();
+    return;
+  }
+
+  const fullDurationMs = state.timer.durationMinutes * 60 * 1000;
+  if (state.timer.remainingMs > 0 && state.timer.remainingMs < fullDurationMs) {
+    startCountdownTimer();
+  }
+}
+
+function pauseCountdownTimer() {
+  if (!state.timer.isRunning) return;
+  state.timer.remainingMs = Math.max(0, state.timer.targetTimeMs - Date.now());
+  window.clearInterval(state.timer.intervalId);
+  state.timer.intervalId = 0;
+  state.timer.targetTimeMs = 0;
+  state.timer.isRunning = false;
+  syncCountdownTimerUI();
+  setTimerStatus(`Timer paused at ${formatCountdownClock(state.timer.remainingMs)}.`);
+}
+
+function resetCountdownTimer() {
+  stopCountdownTimer({ keepRemaining: false });
+  stopTimerSiren({ silent: true });
+  state.timer.firedWarnings = new Set();
+  syncCountdownTimerUI();
+  setTimerStatus(`Ready at ${formatCountdownClock(state.timer.remainingMs)}.`);
+}
+
+function stopCountdownTimer(options = {}) {
+  const keepRemaining = Boolean(options.keepRemaining);
+  if (state.timer.isRunning) {
+    state.timer.remainingMs = Math.max(0, state.timer.targetTimeMs - Date.now());
+  }
+  window.clearInterval(state.timer.intervalId);
+  state.timer.intervalId = 0;
+  state.timer.targetTimeMs = 0;
+  state.timer.isRunning = false;
+  if (!keepRemaining) {
+    state.timer.remainingMs = state.timer.durationMinutes * 60 * 1000;
+  }
+}
+
+function tickCountdownTimer() {
+  if (!state.timer.isRunning) return;
+
+  const previousMs = state.timer.remainingMs;
+  const nextMs = Math.max(0, state.timer.targetTimeMs - Date.now());
+  state.timer.remainingMs = nextMs;
+  handleTimerWarningThresholds(previousMs, nextMs);
+  syncCountdownTimerUI();
+
+  if (nextMs > 0) return;
+
+  window.clearInterval(state.timer.intervalId);
+  state.timer.intervalId = 0;
+  state.timer.targetTimeMs = 0;
+  state.timer.isRunning = false;
+  state.timer.remainingMs = 0;
+  syncCountdownTimerUI();
+  startTimerSiren({ mode: "alert" });
+  setTimerStatus("Time expired. Air raid siren active.", true);
+}
+
+function handleTimerWarningThresholds(previousMs, nextMs) {
+  const thresholds = [...state.timer.warningSeconds].sort((a, b) => b - a);
+  thresholds.forEach((seconds) => {
+    const thresholdMs = seconds * 1000;
+    if (state.timer.firedWarnings.has(seconds)) return;
+    if (previousMs >= thresholdMs && nextMs <= thresholdMs) {
+      state.timer.firedWarnings.add(seconds);
+      speakTimerWarning(`${seconds} seconds left.`);
+    }
+  });
+}
+
+function speakTimerWarning(message) {
+  speakShortMessage(message, { voiceId: state.timer.voiceId, rate: DEFAULT_TIMER_WARNING_RATE });
+}
+
+function speakShortMessage(message, options = {}) {
+  if (!window.speechSynthesis) return false;
+  const text = String(message || "").trim();
+  if (!text) return false;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voice = resolveVoiceForId(options.voiceId) || selectedLocalVoice() || pickBestVoice(state.voices);
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang || "en-AU";
+  } else {
+    utterance.lang = "en-AU";
+  }
+
+  utterance.rate = clamp(Number(options.rate) || 1, 0.8, 1.4);
+  utterance.volume = clamp(
+    typeof options.volume === "number" ? options.volume : state.narrationVolumeRatio,
+    0,
+    1
+  );
+  window.speechSynthesis.speak(utterance);
+  return true;
+}
+
+function resolveVoiceForId(voiceId) {
+  if (!voiceId) return null;
+  return state.voiceMap.get(voiceId) || null;
+}
+
+function handleTimerSirenVolumeInput() {
+  updateTimerSirenVolumeReadout();
+  applyTimerSirenVolume();
+}
+
+function updateTimerSirenVolumeReadout() {
+  if (!dom.timerSirenVolume || !dom.timerSirenVolumeValue) return;
+  const ratio = clamp((Number(dom.timerSirenVolume.value) || 0) / 100, 0, 1);
+  state.timerSirenVolumeRatio = ratio;
+  dom.timerSirenVolumeValue.textContent = `${Math.round(ratio * 100)}%`;
+}
+
+function applyTimerSirenVolume(sirenState = state.timerSiren) {
+  if (!sirenState?.masterGain?.gain) return;
+  sirenState.masterGain.gain.value = clamp(
+    (Number(sirenState.baseGain) || 0.55) * state.timerSirenVolumeRatio,
+    0,
+    0.9
+  );
+}
+
+function playTimerSirenDemo() {
+  startTimerSiren({ mode: "demo", durationMs: 3500 });
+  setTimerStatus("Playing siren demo.");
+}
+
+function startTimerSiren(options = {}) {
+  stopTimerSiren({ silent: true });
+
+  const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextCtor) {
+    setTimerStatus("Web Audio API is not available in this browser.", true);
+    return;
+  }
+
+  const context = new AudioContextCtor();
+  const masterGain = context.createGain();
+  masterGain.connect(context.destination);
+
+  const cleanups = [
+    addSirenLayer(context, masterGain, 0.16),
+    addNoiseLayer(context, masterGain, {
+      type: "highpass",
+      frequency: 1600,
+      q: 0.7,
+      gain: 0.08,
+    }),
+  ];
+
+  const sirenState = {
+    context,
+    masterGain,
+    baseGain: 0.72,
+    mode: options.mode || "alert",
+    stop() {
+      cleanups.forEach((cleanup) => {
+        try {
+          cleanup();
+        } catch (_) {}
+      });
+      try {
+        context.close();
+      } catch (_) {}
+    },
+  };
+
+  state.timerSiren = sirenState;
+  applyTimerSirenVolume(sirenState);
+  context.resume().catch(() => {});
+  syncCountdownTimerUI();
+
+  if (options.durationMs) {
+    window.clearTimeout(state.timerDemoTimeoutId);
+    state.timerDemoTimeoutId = window.setTimeout(() => {
+      stopTimerSiren({ silent: true });
+      setTimerStatus("Siren demo ended.");
+    }, options.durationMs);
+  }
+}
+
+function stopTimerSiren(options = {}) {
+  window.clearTimeout(state.timerDemoTimeoutId);
+  state.timerDemoTimeoutId = 0;
+  if (!state.timerSiren) {
+    syncCountdownTimerUI();
+    return;
+  }
+
+  try {
+    state.timerSiren.stop();
+  } catch (_) {}
+  state.timerSiren = null;
+  syncCountdownTimerUI();
+
+  if (!options.silent) {
+    setTimerStatus("Siren stopped.");
+  }
+}
+
+function syncCountdownTimerUI() {
+  const fullDurationMs = state.timer.durationMinutes * 60 * 1000;
+  updateFlipClockDisplay(state.timer.remainingMs);
+
+  if (dom.countdownTimerBox) {
+    dom.countdownTimerBox.classList.toggle("running", state.timer.isRunning);
+    dom.countdownTimerBox.classList.toggle("expired", !state.timer.isRunning && state.timer.remainingMs <= 0);
+  }
+
+  if (dom.startTimer) {
+    dom.startTimer.disabled = state.timer.isRunning;
+    dom.startTimer.classList.toggle("active", state.timer.isRunning);
+  }
+
+  if (dom.pauseTimer) {
+    const canResume = !state.timer.isRunning && state.timer.remainingMs > 0 && state.timer.remainingMs < fullDurationMs;
+    dom.pauseTimer.disabled = !state.timer.isRunning && !canResume;
+    dom.pauseTimer.innerHTML = state.timer.isRunning ? "&#9208; Pause" : "&#9654; Resume";
+    dom.pauseTimer.classList.toggle("active", canResume);
+  }
+
+  if (dom.resetTimer) {
+    dom.resetTimer.disabled = false;
+  }
+
+  if (dom.countdownMinutes) {
+    dom.countdownMinutes.disabled = state.timer.isRunning;
+  }
+
+  if (dom.playSirenDemo) {
+    const isAlertActive = state.timerSiren?.mode === "alert";
+    const isDemoActive = state.timerSiren?.mode === "demo";
+    dom.playSirenDemo.disabled = isAlertActive;
+    dom.playSirenDemo.classList.toggle("active", Boolean(isDemoActive));
+  }
+
+  if (dom.stopSiren) {
+    dom.stopSiren.disabled = !state.timerSiren;
+    dom.stopSiren.classList.toggle("active", Boolean(state.timerSiren));
+  }
+}
+
+function updateFlipClockDisplay(remainingMs) {
+  const displaySeconds = remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+  const minutes = Math.floor(displaySeconds / 60);
+  const seconds = displaySeconds % 60;
+  const minuteText = String(minutes).padStart(2, "0");
+  const secondText = String(seconds).padStart(2, "0");
+  const digits = {
+    m1: minuteText[0],
+    m2: minuteText[1],
+    s1: secondText[0],
+    s2: secondText[1],
+  };
+
+  Object.entries(digits).forEach(([key, value]) => {
+    const node = dom.timerDigits[key];
+    if (!node) return;
+    if (node.textContent === value) return;
+    node.textContent = value;
+    animateFlipDigitChange(node);
+  });
+}
+
+function animateFlipDigitChange(node) {
+  const digit = node.closest(".flip-digit");
+  if (!digit) return;
+  digit.classList.remove("digit-flip");
+  window.requestAnimationFrame(() => {
+    digit.classList.add("digit-flip");
+    window.setTimeout(() => digit.classList.remove("digit-flip"), 240);
+  });
+}
+
+function formatCountdownClock(milliseconds) {
+  const totalSeconds = milliseconds > 0 ? Math.ceil(milliseconds / 1000) : 0;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function renderZombieCountIcons() {
@@ -474,7 +967,7 @@ function syncZombieLeaderSelectionFromCount(targetCount) {
 
 function buildScriptPanelDom() {
   return Object.fromEntries(
-    SCRIPT_TYPES.map((type) => {
+    PANEL_TYPES.map((type) => {
       const panel = document.querySelector(`[data-script-panel="${type}"]`);
       return [
         type,
@@ -484,6 +977,7 @@ function buildScriptPanelDom() {
           pauseButton: panel?.querySelector('[data-script-action="pause"]') || null,
           progressInput: panel?.querySelector("[data-script-progress-input]") || null,
           progressMeta: panel?.querySelector("[data-script-progress-meta]") || null,
+          textarea: panel?.querySelector("textarea") || null,
         },
       ];
     })
@@ -491,7 +985,7 @@ function buildScriptPanelDom() {
 }
 
 function bindScriptPanelEvents() {
-  SCRIPT_TYPES.forEach((type) => {
+  PANEL_TYPES.forEach((type) => {
     const panelDom = dom.scriptPanels[type];
     if (!panelDom) return;
     panelDom.playButton?.addEventListener("click", () => playScript(type));
@@ -1030,6 +1524,10 @@ function buildScripts(assignments, activeRoles) {
     intro.push(SCRIPT_TEXT.intro[11]);
     intro.push(SCRIPT_PAUSE_MARKER);
   }
+  if (roleIds.has("intern")) {
+    intro.push("Now could the Intern open your eyes and look at me please. Thank you and good luck. Please close your eyes.");
+    intro.push(SCRIPT_PAUSE_MARKER);
+  }
   if (roleIds.has("office-matchmaker")) {
     intro.push(SCRIPT_TEXT.intro[12]);
     intro.push(SCRIPT_PAUSE_MARKER);
@@ -1049,6 +1547,33 @@ function buildScripts(assignments, activeRoles) {
   intro.push(SCRIPT_TEXT.intro[19]);
 
   const day = [SCRIPT_TEXT.day[0]];
+  const hasDayRoleActions =
+    roleIds.has("office-manager") ||
+    roleIds.has("hr-lead") ||
+    roleIds.has("it-specialist");
+
+  if (hasDayRoleActions) {
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[1]);
+  }
+  if (roleIds.has("office-manager")) {
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[2]);
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[3]);
+  }
+  if (roleIds.has("hr-lead")) {
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[4]);
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[5]);
+  }
+  if (roleIds.has("it-specialist")) {
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[6]);
+    day.push(SCRIPT_PAUSE_MARKER);
+    day.push(SCRIPT_TEXT.day[7]);
+  }
 
   const night = [SCRIPT_TEXT.night[0]];
   if (roleIds.has("training-supervisor")) {
@@ -1318,6 +1843,7 @@ function populateVoiceList() {
       }
     }
     renderVoiceChoices();
+    renderTimerVoiceChoices();
     syncScriptPlaybackUI();
     return;
   }
@@ -1328,6 +1854,7 @@ function populateVoiceList() {
   if (!allVoices.length) {
     state.voiceMap = new Map();
     renderVoiceChoices();
+    renderTimerVoiceChoices();
     syncScriptPlaybackUI();
     return;
   }
@@ -1346,6 +1873,7 @@ function populateVoiceList() {
   }
 
   renderVoiceChoices();
+  renderTimerVoiceChoices();
   syncScriptPlaybackUI();
 }
 
@@ -1400,8 +1928,18 @@ function pickBestVoice(voices) {
 }
 
 function renderVoiceChoices() {
-  if (!dom.voiceChoices) return;
-  dom.voiceChoices.innerHTML = VOICE_OPTIONS.map((option) => {
+  [dom.voiceChoices, dom.lessonsVoiceChoices].forEach((container) => {
+    renderVoiceChoiceGroup(container);
+  });
+
+  if (dom.testVoice) {
+    dom.testVoice.disabled = !isSelectedVoiceAvailable();
+  }
+}
+
+function renderVoiceChoiceGroup(container) {
+  if (!container) return;
+  container.innerHTML = VOICE_OPTIONS.map((option) => {
     const isAvailable = isVoiceOptionAvailable(option);
     const isActive = option.id === state.selectedVoiceId && isAvailable;
     const meta = getVoiceOptionMeta(option);
@@ -1424,7 +1962,7 @@ function renderVoiceChoices() {
     `;
   }).join("");
 
-  dom.voiceChoices.querySelectorAll('[data-action="select-voice"]').forEach((button) => {
+  container.querySelectorAll('[data-action="select-voice"]').forEach((button) => {
     button.addEventListener("click", () => {
       const voiceId = button.dataset.voiceId;
       const option = VOICE_OPTIONS.find((entry) => entry.id === voiceId);
@@ -1439,10 +1977,6 @@ function renderVoiceChoices() {
       setAudioStatus(`${option.name} selected.`);
     });
   });
-
-  if (dom.testVoice) {
-    dom.testVoice.disabled = !isSelectedVoiceAvailable();
-  }
 }
 
 function isVoiceOptionAvailable(option) {
@@ -1474,8 +2008,39 @@ function normalizeLang(lang) {
 }
 
 function updateVoiceControlReadouts() {
-  const speed = Number(dom.voiceRate.value).toFixed(2);
-  dom.voiceRateValue.textContent = `${speed}x`;
+  const speed = clamp(Number(dom.voiceRate?.value ?? dom.lessonsVoiceRate?.value ?? 1), 0.6, 1.8);
+  if (dom.voiceRate) dom.voiceRate.value = String(speed);
+  if (dom.lessonsVoiceRate) dom.lessonsVoiceRate.value = String(speed);
+  const speedText = `${speed.toFixed(2)}x`;
+  if (dom.voiceRateValue) dom.voiceRateValue.textContent = speedText;
+  if (dom.lessonsVoiceRateValue) dom.lessonsVoiceRateValue.textContent = speedText;
+
+  const volumePercent = clamp(
+    Number(dom.voiceVolume?.value ?? dom.lessonsVoiceVolume?.value ?? 100),
+    0,
+    100
+  );
+  if (dom.voiceVolume) dom.voiceVolume.value = String(volumePercent);
+  if (dom.lessonsVoiceVolume) dom.lessonsVoiceVolume.value = String(volumePercent);
+  const ratio = clamp(volumePercent / 100, 0, 1);
+  state.narrationVolumeRatio = ratio;
+  const volumeText = `${Math.round(ratio * 100)}%`;
+  if (dom.voiceVolumeValue) dom.voiceVolumeValue.textContent = volumeText;
+  if (dom.lessonsVoiceVolumeValue) dom.lessonsVoiceVolumeValue.textContent = volumeText;
+}
+
+function handleVoiceRateInput(event) {
+  const nextValue = clamp(Number(event.currentTarget?.value ?? 1), 0.6, 1.8);
+  if (dom.voiceRate) dom.voiceRate.value = String(nextValue);
+  if (dom.lessonsVoiceRate) dom.lessonsVoiceRate.value = String(nextValue);
+  updateVoiceControlReadouts();
+}
+
+function handleVoiceVolumeInput(event) {
+  const nextValue = clamp(Number(event.currentTarget?.value ?? 100), 0, 100);
+  if (dom.voiceVolume) dom.voiceVolume.value = String(nextValue);
+  if (dom.lessonsVoiceVolume) dom.lessonsVoiceVolume.value = String(nextValue);
+  updateVoiceControlReadouts();
 }
 
 function handleTestVoice() {
@@ -1484,6 +2049,53 @@ function handleTestVoice() {
     "This is the current voice and speed setting.",
   ];
   speakLines(sample, { label: "Voice test" });
+}
+
+function getPanelLines(type) {
+  if (LESSON_TYPES.includes(type)) {
+    return buildLessonSpeechLines(LESSON_TEXT[type] || []);
+  }
+  return state.scripts[type] || [];
+}
+
+function getPanelDisplayLines(type) {
+  if (type === "orientation" && !dom.orientationEnabled.checked) {
+    return ["Orientation disabled for this session."];
+  }
+  if (LESSON_TYPES.includes(type)) {
+    return LESSON_TEXT[type] || [];
+  }
+  return getPanelLines(type);
+}
+
+function buildLessonSpeechLines(lines = []) {
+  return lines.flatMap((line) => splitSpeechChunks(line));
+}
+
+function splitSpeechChunks(text) {
+  const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+  if (!cleaned) return [];
+
+  const sentenceChunks = cleaned.split(/(?<=[.!?])\s+/).filter(Boolean);
+  return sentenceChunks.flatMap((chunk) => splitLongSpeechChunk(chunk));
+}
+
+function splitLongSpeechChunk(chunk) {
+  const cleaned = String(chunk || "").trim();
+  if (!cleaned) return [];
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  if (words.length <= 18) return [cleaned];
+
+  const clauseChunks = cleaned.split(/(?<=[,;:—])\s+/).filter(Boolean);
+  if (clauseChunks.length > 1) {
+    return clauseChunks.flatMap((part) => splitLongSpeechChunk(part));
+  }
+
+  const midpoint = Math.ceil(words.length / 2);
+  return [
+    words.slice(0, midpoint).join(" "),
+    words.slice(midpoint).join(" "),
+  ].filter(Boolean);
 }
 
 function playScript(type) {
@@ -1497,9 +2109,9 @@ function playScript(type) {
     return;
   }
 
-  const lines = state.scripts[type];
+  const lines = getPanelLines(type);
   if (!lines || !lines.length) {
-    setAudioStatus("No script available for this sequence.", true);
+    setAudioStatus("No narration available for this item.", true);
     return;
   }
 
@@ -1588,13 +2200,11 @@ function speakLinesWithLocalVoice(lines, options = {}, voiceOption) {
     }
 
     utterance.rate = rate;
-    utterance.volume = SCRIPT_VOICE_VOLUME;
+    utterance.volume = clamp(state.narrationVolumeRatio, 0, 1);
     utterance.onstart = () => {
       if (!isCurrentSession()) return;
       markScriptPlaybackLineStart(sessionId, fullSegmentIndex);
-      const spokenTotal = countSpokenLines(fullLines);
-      const spokenCurrent = spokenLineNumberAt(fullLines, currentSegmentData.sourceLineIndex);
-      setAudioStatus(`${label}: line ${spokenCurrent} of ${spokenTotal}`);
+      setAudioStatus(`${label} currently playing.`);
     };
     utterance.onpause = () => {
       if (!isCurrentSession()) return;
@@ -1675,7 +2285,7 @@ function toggleScriptPause(type) {
 }
 
 function setScriptPlaybackControlsDisabled(disabled) {
-  SCRIPT_TYPES.forEach((type) => {
+  PANEL_TYPES.forEach((type) => {
     const panelDom = dom.scriptPanels[type];
     if (!panelDom) return;
     if (panelDom.playButton) panelDom.playButton.disabled = disabled;
@@ -1747,7 +2357,7 @@ function resumeScriptFromPending(type) {
 
 function beginScriptScrub(type, event) {
   const panelDom = dom.scriptPanels[type];
-  const fullLines = state.scripts[type];
+  const fullLines = getPanelLines(type);
   if (!panelDom?.progressInput || !fullLines?.length || !window.speechSynthesis) return;
   if (type === "orientation" && !dom.orientationEnabled.checked) return;
   const initialValue = Number(panelDom.progressInput.value || 0);
@@ -1781,7 +2391,7 @@ function beginScriptScrub(type, event) {
 
 function updateScriptScrub(type, event) {
   const panelDom = dom.scriptPanels[type];
-  const fullLines = state.scripts[type];
+  const fullLines = getPanelLines(type);
   if (!panelDom?.progressInput || !fullLines?.length) return;
   const value = Number(event.currentTarget?.value ?? panelDom.progressInput.value ?? 0);
   const max = Number(event.currentTarget?.max ?? panelDom.progressInput.max ?? 1000);
@@ -1946,12 +2556,12 @@ function syncScriptPlaybackUI() {
   const pendingResume = state.scriptPendingResume;
   const completedPlayback = state.completedScriptPlayback;
 
-  SCRIPT_TYPES.forEach((type) => {
+  PANEL_TYPES.forEach((type) => {
     const panelDom = dom.scriptPanels[type];
     if (!panelDom?.panel) return;
 
     const hasSpeechSupport = isSelectedVoiceAvailable();
-    const hasScript = Boolean(state.scripts[type]?.length);
+    const hasScript = Boolean(getPanelLines(type)?.length);
     const orientationDisabled = type === "orientation" && !dom.orientationEnabled.checked;
     const isActive = activePlayback?.type === type;
     const isPaused = isActive && activePlayback?.isPaused;
@@ -2110,16 +2720,6 @@ function formatDuration(milliseconds) {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
-}
-
-function countSpokenLines(lines = []) {
-  return lines.filter((line) => line !== SCRIPT_PAUSE_MARKER && line !== SCRIPT_PAUSE_2S_MARKER).length;
-}
-
-function spokenLineNumberAt(lines = [], lineIndex = 0) {
-  return lines
-    .slice(0, lineIndex + 1)
-    .filter((line) => line !== SCRIPT_PAUSE_MARKER && line !== SCRIPT_PAUSE_2S_MARKER).length;
 }
 
 function handlePlayNightAudio() {
@@ -3255,15 +3855,19 @@ function spawnGrowl(context, destination) {
 }
 
 function updateScriptViews() {
-  const orientationLines = dom.orientationEnabled.checked
-    ? state.scripts.orientation
-    : ["Orientation disabled for this session."];
-
-  dom.orientationScript.value = formatScript(orientationLines);
-  dom.introScript.value = formatScript(state.scripts.intro);
-  dom.dayScript.value = formatScript(state.scripts.day);
-  dom.nightScript.value = formatScript(state.scripts.night);
+  PANEL_TYPES.forEach((type) => {
+    const panelDom = dom.scriptPanels[type];
+    if (!panelDom?.textarea) return;
+    panelDom.textarea.value = formatPanelText(type, getPanelDisplayLines(type));
+  });
   syncScriptPlaybackUI();
+}
+
+function formatPanelText(type, lines = []) {
+  if (LESSON_TYPES.includes(type)) {
+    return formatLessonText(lines);
+  }
+  return formatScript(lines);
 }
 
 function formatScript(lines = []) {
@@ -3281,6 +3885,13 @@ function formatScript(lines = []) {
       return `${spokenIndex}. ${line}`;
     })
     .join("\n");
+}
+
+function formatLessonText(lines = []) {
+  if (!lines.length) return "Key lessons will appear here.";
+  return lines
+    .filter((line) => line !== SCRIPT_PAUSE_MARKER && line !== SCRIPT_PAUSE_2S_MARKER)
+    .join("\n\n");
 }
 
 function naturalList(items) {
@@ -3331,9 +3942,18 @@ function setAuthStatus(message, isError = false) {
   dom.authStatus.style.color = isError ? "var(--danger)" : "var(--accent-mint)";
 }
 
+function setTimerStatus(message, isError = false) {
+  if (!dom.timerStatus) return;
+  dom.timerStatus.textContent = message;
+  dom.timerStatus.style.color = isError ? "var(--danger)" : "var(--accent-mint)";
+}
+
 function setAudioStatus(message, isError = false) {
-  dom.audioStatus.textContent = message;
-  dom.audioStatus.style.color = isError ? "var(--danger)" : "var(--accent-mint)";
+  [dom.audioStatus, dom.lessonsAudioStatus].forEach((target) => {
+    if (!target) return;
+    target.textContent = message;
+    target.style.color = isError ? "var(--danger)" : "var(--accent-mint)";
+  });
 }
 
 init();
