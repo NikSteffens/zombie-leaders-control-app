@@ -409,11 +409,13 @@ const dom = {
   voiceVolume: document.getElementById("voice-volume"),
   voiceVolumeValue: document.getElementById("voice-volume-value"),
   voiceChoices: document.getElementById("voice-choices"),
+  voiceDiagnostic: document.getElementById("voice-diagnostic"),
   lessonsVoiceRate: document.getElementById("lessons-voice-rate"),
   lessonsVoiceRateValue: document.getElementById("lessons-voice-rate-value"),
   lessonsVoiceVolume: document.getElementById("lessons-voice-volume"),
   lessonsVoiceVolumeValue: document.getElementById("lessons-voice-volume-value"),
   lessonsVoiceChoices: document.getElementById("lessons-voice-choices"),
+  lessonsVoiceDiagnostic: document.getElementById("lessons-voice-diagnostic"),
   testVoice: document.getElementById("test-voice"),
   audioStatus: document.getElementById("audio-status"),
   lessonsAudioStatus: document.getElementById("lessons-audio-status"),
@@ -709,7 +711,10 @@ function speakTimerWarning(message) {
 }
 
 function speakShortMessage(message, options = {}) {
-  if (!window.speechSynthesis) return false;
+  if (!canUseBrowserSpeechFallback()) {
+    setTimerStatus("This browser does not support spoken timer warnings. Try Chrome, Edge, or Safari with text-to-speech enabled on the device.", true);
+    return false;
+  }
   const text = String(message || "").trim();
   if (!text) return false;
 
@@ -1985,7 +1990,7 @@ function resolveUsableVoiceForOption(option) {
 }
 
 function canUseBrowserSpeechFallback() {
-  return Boolean(window.speechSynthesis && typeof window.SpeechSynthesisUtterance === "function");
+  return Boolean(window.speechSynthesis && typeof SpeechSynthesisUtterance === "function");
 }
 
 function sortVoicesByQuality(voices) {
@@ -2014,6 +2019,7 @@ function renderVoiceChoices() {
   [dom.voiceChoices, dom.lessonsVoiceChoices].forEach((container) => {
     renderVoiceChoiceGroup(container);
   });
+  renderVoiceDiagnostics();
 
   if (dom.testVoice) {
     dom.testVoice.disabled = !isSelectedVoiceAvailable();
@@ -2084,8 +2090,52 @@ function getVoiceOptionMeta(option) {
 
 function getVoiceUnavailableReason(option) {
   if (!option) return "Select a voice first.";
-  if (!window.speechSynthesis) return "Speech synthesis is not supported in this browser.";
+  if (!canUseBrowserSpeechFallback()) return getSpeechUnsupportedMessage();
   return "No compatible text-to-speech voice is available on this computer.";
+}
+
+function getSpeechUnsupportedMessage() {
+  return "This browser does not support spoken Narration or Key Takeaways. Try Chrome, Edge, or Safari with text-to-speech enabled on the device.";
+}
+
+function renderVoiceDiagnostics() {
+  const markup = buildVoiceDiagnosticMarkup();
+  [dom.voiceDiagnostic, dom.lessonsVoiceDiagnostic].forEach((container) => {
+    if (!container) return;
+    container.innerHTML = markup;
+  });
+}
+
+function buildVoiceDiagnosticMarkup() {
+  if (!canUseBrowserSpeechFallback()) {
+    return `
+      <p class="voice-diagnostic-title">Voice Check</p>
+      <p class="voice-diagnostic-warning">${escapeHtml(getSpeechUnsupportedMessage())}</p>
+    `;
+  }
+
+  const note = !state.voices.length
+    ? "Your browser can still speak, but the device voice list has not loaded yet. If you press play now, the browser default voice will be used."
+    : "These are the actual browser voices currently mapped to the three voice buttons.";
+
+  const items = VOICE_OPTIONS.map((option) => {
+    const voice = resolveUsableVoiceForOption(option);
+    const label = voice
+      ? `${voice.name || "Browser default"}${voice.lang ? ` (${voice.lang})` : ""}`
+      : "Browser default voice";
+    return `
+      <li>
+        <span class="voice-diagnostic-label">${escapeHtml(option.name)}</span>
+        <span class="voice-diagnostic-value">${escapeHtml(label)}</span>
+      </li>
+    `;
+  }).join("");
+
+  return `
+    <p class="voice-diagnostic-title">Voice Check</p>
+    <p class="voice-diagnostic-note">${escapeHtml(note)}</p>
+    <ul class="voice-diagnostic-list">${items}</ul>
+  `;
 }
 
 function getVoiceKey(voice) {
@@ -2215,8 +2265,8 @@ function playScript(type) {
 }
 
 function speakLines(lines, options = {}) {
-  if (!window.speechSynthesis) {
-    setAudioStatus("Speech synthesis is not supported in this browser.", true);
+  if (!canUseBrowserSpeechFallback()) {
+    setAudioStatus(getSpeechUnsupportedMessage(), true);
     return;
   }
 
