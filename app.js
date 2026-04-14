@@ -27,12 +27,12 @@ const SCRIPT_LABELS = Object.freeze({
   intro: "Introduction",
   day: "Day Sequence",
   night: "Night Sequence",
-  lesson1: "Lesson 1",
-  lesson2: "Lesson 2",
-  lesson3: "Lesson 3",
-  lesson4: "Lesson 4",
-  lesson5: "Lesson 5",
-  lesson6: "Lesson 6",
+  lesson1: "Takeaway 1",
+  lesson2: "Takeaway 2",
+  lesson3: "Takeaway 3",
+  lesson4: "Takeaway 4",
+  lesson5: "Takeaway 5",
+  lesson6: "Takeaway 6",
 });
 const VOICE_OPTIONS = Object.freeze([
   {
@@ -3888,7 +3888,7 @@ function formatScript(lines = []) {
 }
 
 function formatLessonText(lines = []) {
-  if (!lines.length) return "Key lessons will appear here.";
+  if (!lines.length) return "Key takeaways will appear here.";
   return lines
     .filter((line) => line !== SCRIPT_PAUSE_MARKER && line !== SCRIPT_PAUSE_2S_MARKER)
     .join("\n\n");
