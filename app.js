@@ -415,7 +415,6 @@ const dom = {
   lessonsVoiceVolume: document.getElementById("lessons-voice-volume"),
   lessonsVoiceVolumeValue: document.getElementById("lessons-voice-volume-value"),
   lessonsVoiceChoices: document.getElementById("lessons-voice-choices"),
-  lessonsVoiceDiagnostic: document.getElementById("lessons-voice-diagnostic"),
   testVoice: document.getElementById("test-voice"),
   audioStatus: document.getElementById("audio-status"),
   lessonsAudioStatus: document.getElementById("lessons-audio-status"),
@@ -2100,7 +2099,7 @@ function getSpeechUnsupportedMessage() {
 
 function renderVoiceDiagnostics() {
   const markup = buildVoiceDiagnosticMarkup();
-  [dom.voiceDiagnostic, dom.lessonsVoiceDiagnostic].forEach((container) => {
+  [dom.voiceDiagnostic].forEach((container) => {
     if (!container) return;
     container.innerHTML = markup;
   });
