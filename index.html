@@ -6,7 +6,7 @@
   <title>Zombie Leaders Control App</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Creepster&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Creepster&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body class="locked">
@@ -35,9 +35,12 @@
       </p>
     </header>
 
-    <section class="section panel" id="setup-panel">
-      <h2>1) Player Setup</h2>
-      <p class="hint">Set number of players first, then optionally add names.</p>
+    <section class="section panel panel-setup" id="setup-panel">
+      <div class="panel-title-block">
+        <p class="panel-kicker">Headcount Intake</p>
+        <h2>1) Player Setup</h2>
+      </div>
+      <p class="hint panel-intro">Set number of players first, then optionally add names.</p>
       <div class="row">
         <div class="field compact">
           <label for="player-count">Number of Players</label>
@@ -45,27 +48,32 @@
         </div>
       </div>
       <div class="field compact player-names-field">
-        <label for="player-names">Player Names (Optional)<br>If you would like the app to randomly assign roles to players, add player names here. If you want players to physically draw their own role card, leave this blank (you can enter player names later to match the role they drew).</label>
-        <textarea id="player-names" rows="8" placeholder="Alex&#10;Beth&#10;Cath&#10;(leave blank to auto-create Player 1..N)"></textarea>
+        <label for="player-names">Player Names (Optional)</label>
+        <p class="field-help">If you would like the app to randomly assign roles to players, add player names here. If you want players to physically draw their own role card, leave this blank (you can enter player names later to match the role they drew).</p>
+        <textarea id="player-names" rows="8" placeholder="Alex Beth Cath (leave blank to auto-create Player 1..N)"></textarea>
       </div>
       <div class="row">
         <div class="field compact zombie-count-field">
           <label for="zombie-count" class="nowrap-label">Zombie Leaders (between 1 and 4)</label>
+          <p class="field-help">Each active icon below results in one hidden Zombie Leader in the organization.</p>
           <input id="zombie-count" type="number" min="1" max="4" value="3">
           <div id="zombie-count-icons" class="zombie-count-icons" role="group" aria-label="Zombie Leader count icons"></div>
         </div>
       </div>
     </section>
 
-    <section class="section panel" id="roles-panel">
-      <div class="section-head">
-        <h2>2) Special Citizen Roles</h2>
+    <section class="section panel panel-roles" id="roles-panel">
+      <div class="section-head panel-head">
+        <div class="panel-title-block">
+          <p class="panel-kicker">Role Inclusion Matrix</p>
+          <h2>2) Special Citizen Roles</h2>
+        </div>
         <div class="button-group">
           <button id="select-all-roles" type="button" class="ghost">Select all</button>
           <button id="clear-all-roles" type="button" class="ghost">Clear All</button>
         </div>
       </div>
-      <p class="hint">
+      <p class="hint panel-intro">
         By default no special roles are selected. If no special roles are assigned, players receive the role
         "Organizational Citizen" with no special abilities. Checked roles will be included in the game that is generated.
       </p>
@@ -76,22 +84,35 @@
       <p id="setup-status" class="status" aria-live="polite">After you have selected the roles you want to include, click here to generate game instructions in the Audio Director below.</p>
     </section>
 
-    <section class="section panel" id="assignments-panel">
-      <div class="section-head">
-        <h2>3) Secret Role Cards</h2>
+    <section class="section panel panel-cards" id="assignments-panel">
+      <div class="section-head panel-head">
+        <div class="panel-title-block">
+          <p class="panel-kicker">Confidential Role Files</p>
+          <h2>3) Secret Role Cards</h2>
+        </div>
         <div class="button-group">
           <button id="reveal-all-cards" type="button" class="ghost">Reveal All Cards</button>
           <button id="hide-all-cards" type="button" class="ghost">Hide All Cards</button>
         </div>
       </div>
+      <p class="hint panel-intro">Reveal, hide, and annotate confidential player identities during live play.</p>
       <div id="game-summary" class="summary"></div>
       <div id="cards-grid" class="cards-grid"></div>
     </section>
 
-    <section class="section panel" id="audio-panel">
-      <h2>4) Audio Director</h2>
-      <div class="night-box">
-        <h3>Background Audio (Masking / Atmosphere) — for Night Time</h3>
+    <section class="section panel panel-operations" id="audio-panel">
+      <div class="section-head panel-head">
+        <div class="panel-title-block">
+          <p class="panel-kicker">Live Facilitation Console</p>
+          <h2>4) Audio Director</h2>
+        </div>
+      </div>
+      <p class="hint panel-intro">Run night masking audio, control day-time pressure, and deliver the live narration cues used during play.</p>
+
+      <div class="audio-control-grid">
+        <div class="night-box" id="night-audio-box">
+          <p class="subpanel-kicker">Night Masking</p>
+          <h3>Background Audio (Masking / Atmosphere) — for Night Time</h3>
         <p class="hint">Choose one of 5 background sounds.</p>
         <div class="row">
           <div class="field">
@@ -120,8 +141,9 @@
           aria-label="Background audio progress"
         >
         <p id="background-audio-progress-meta" class="script-progress-meta">Ready to play.</p>
-      </div>
-      <div class="timer-box" id="countdown-timer-box">
+        </div>
+        <div class="timer-box" id="countdown-timer-box">
+          <p class="subpanel-kicker">Day Pressure</p>
         <h3>Countdown Timer — for Day Time</h3>
         <p class="hint">Set a timer from 1 to 10 minutes.</p>
         <div class="flip-clock" aria-live="polite" aria-label="Countdown timer display">
@@ -180,8 +202,10 @@
         </div>
         <p id="timer-status" class="script-progress-meta timer-status">Ready at 5:00.</p>
       </div>
+      </div>
 
       <div class="narration-box">
+        <p class="subpanel-kicker">Facilitator Voice</p>
         <h3>Narration</h3>
         <div class="row">
           <div class="field">
@@ -327,9 +351,16 @@
       </div>
     </section>
 
-    <section class="section panel" id="lessons-panel">
-      <h2>5) Key Takeaways</h2>
+    <section class="section panel panel-debrief" id="lessons-panel">
+      <div class="section-head panel-head">
+        <div class="panel-title-block">
+          <p class="panel-kicker">Post-Game Debrief</p>
+          <h2>5) Key Takeaways</h2>
+        </div>
+      </div>
+      <p class="hint panel-intro">Use this space after play to read out and discuss the six core ideas the game is designed to surface.</p>
       <div class="lessons-box">
+        <p class="subpanel-kicker">Six Key Takeaways</p>
         <p class="hint">Here are six key takeaways from the game.</p>
         <div class="row">
           <div class="field">

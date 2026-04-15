@@ -346,7 +346,7 @@ const SCRIPT_TEXT = {
 
 const LESSON_TEXT = Object.freeze({
   lesson1: [
-    "Standard models of human psychology don’t tell us what we really need to know. In particular, knowing a lot about someone’s personality, e.g., whether they are conscientious, extraverted or agreeable, doesn’t help us understand how they are going to behave in a complex organizational system that is characterised — as most are — by group division and asymmetric access to information.",
+    "Standard models of human psychology don’t tell us what we need to know. In particular, knowing a lot about someone’s personality (e.g., whether they are extraverted or agreeable) doesn’t help us understand how they are going to behave in a complex organizational system that is characterised — as most are — by group division and asymmetric access to information.",
   ],
   lesson2: [
     "Reliance on zombie leadership models leads us astray. In particular, belief in great men (or women) will typically mean that we end up listening to the wrong people, while failing to heed the urgings of the ordinary group members we should really be attending to.",
@@ -358,10 +358,10 @@ const LESSON_TEXT = Object.freeze({
     "Note that the Sycophant is particularly instructive in pointing to the important difference between a psychological group and a sociological group (a group we identify with vs. a group we are simply a member of). The Sycophant is an Organizational Citizen but they identify with the Zombie Leaders, and it is their identification with the Zombie Leaders that ultimately shapes their behaviour.",
   ],
   lesson5: [
-    "The machinations of social identity are hard to predict. Even if we know what group someone identifies with, we can’t predict what they are going to do unless we can anticipate the situation that they and their group are going to find themselves in. Mapping these situations and their implications is therefore a priority for psychological analysis.",
+    "The machinations of social identity are hard to predict. Even if we know what group someone identifies with, we can’t predict what they are going to do unless we can anticipate the situation that they and their group are going to find themselves in. Mapping these situations and their implications out is therefore a priority for psychological analysis.",
   ],
   lesson6: [
-    "Being right is not enough. In psychology, as in science, we often imagine that all we need to do is know the truth and be right. But this is never enough to influence others and change the world in the ways we and the groups we identify with want it to change. To do this, we need to persuade others that we are right while also protecting ourselves against the groups who are threatened by our knowledge.",
+    "Being right is not enough. In psychological science, we often imagine that all we need to do is discover the truth and be right. But this is never enough to influence others and change the world in the ways we and the groups we identify with want it to change. To do this, we need to persuade others that we are right while also protecting ourselves against the groups who are threatened by our knowledge.",
   ],
 });
 
@@ -397,6 +397,7 @@ const dom = {
   stopSiren: document.getElementById("stop-siren"),
   timerStatus: document.getElementById("timer-status"),
   timerVoiceChoices: document.getElementById("timer-voice-choices"),
+  nightAudioBox: document.getElementById("night-audio-box"),
   startNight: document.getElementById("start-night"),
   pauseNight: document.getElementById("pause-night"),
   ambienceSelect: document.getElementById("ambience-select"),
@@ -1730,13 +1731,18 @@ function renderCards() {
     .map((entry, index) => {
       const visibleName = displayPlayerName(entry, index);
       const cardVariantSeed = hashString(`${visibleName}|${entry.role.id}`);
+      const fileCode = `HDC-${String(index + 1).padStart(2, "0")}`;
       const cardClassNames = [
         "card",
         entry.team === "zombie" ? "card-zombie" : "card-citizen",
         entry.role.id === "sycophant" ? "card-sycophant" : "",
       ].filter(Boolean).join(" ");
       return `
-        <article class="${cardClassNames}" data-index="${index}">
+        <article class="${cardClassNames}" data-index="${index}" data-team="${escapeHtml(entry.team)}">
+          <div class="card-record-strip">
+            <span class="card-record-id">${escapeHtml(fileCode)}</span>
+            <span class="card-record-classification">Confidential personnel file</span>
+          </div>
           <div class="card-header">
             <div class="card-header-main">
               ${renderHiddenThumb("card-thumb card-thumb-hidden")}
@@ -1746,43 +1752,58 @@ function renderCards() {
                 className: "card-thumb card-thumb-revealed",
                 variantSeed: cardVariantSeed,
               })}
-              <input
-                type="text"
-                class="card-name-input"
-                data-action="edit-name"
-                data-index="${index}"
-                value="${escapeHtml(visibleName)}"
-                placeholder="Player ${index + 1}"
-                aria-label="Player name for card ${index + 1}"
-              >
+              <div class="card-identity-block">
+                <p class="card-identity-kicker">Happy Days Corporation</p>
+                <input
+                  type="text"
+                  class="card-name-input"
+                  data-action="edit-name"
+                  data-index="${index}"
+                  value="${escapeHtml(visibleName)}"
+                  placeholder="Player ${index + 1}"
+                  aria-label="Player name for card ${index + 1}"
+                >
+              </div>
             </div>
-            <span class="badge hidden">Hidden</span>
+            <span class="badge hidden">Sealed</span>
           </div>
           <div class="card-details">
-            <p class="card-role-line">
-              <strong>Role:</strong>
-              <span>${escapeHtml(entry.role.name)}</span>
-            </p>
-            <p>${escapeHtml(entry.role.summary)}</p>
+            <div class="card-section">
+              <p class="card-section-label">Assigned Role</p>
+              <p class="card-role-line">
+                <span class="card-detail-label">Role</span>
+                <span>${escapeHtml(entry.role.name)}</span>
+              </p>
+            </div>
+            <div class="card-section">
+              <p class="card-section-label">Briefing</p>
+              <p class="card-summary-text">${escapeHtml(entry.role.summary)}</p>
+            </div>
             ${
               entry.team === "zombie"
-                ? `<p data-zombie-allies-for="${index}">
-                    <strong>Zombie Allies:</strong>
-                    <span data-zombie-allies-text>${escapeHtml(zombieAlliesText(index))}</span>
-                  </p>`
+                ? `<div class="card-section card-section-allies" data-zombie-allies-for="${index}">
+                    <p class="card-section-label">Known Allies</p>
+                    <p class="card-data-row">
+                      <span class="card-detail-label">Zombie Allies</span>
+                      <span data-zombie-allies-text>${escapeHtml(zombieAlliesText(index))}</span>
+                    </p>
+                  </div>`
                 : ""
             }
             ${
               entry.role.id === "union-rep"
-                ? `<p data-union-allies-for="${index}">
-                    <strong>Union Allies:</strong>
-                    <span data-union-allies-text>${escapeHtml(unionAlliesText(index))}</span>
-                  </p>`
+                ? `<div class="card-section card-section-allies" data-union-allies-for="${index}">
+                    <p class="card-section-label">Known Allies</p>
+                    <p class="card-data-row">
+                      <span class="card-detail-label">Union Allies</span>
+                      <span data-union-allies-text>${escapeHtml(unionAlliesText(index))}</span>
+                    </p>
+                  </div>`
                 : ""
             }
           </div>
           <div class="card-actions">
-            <button type="button" data-action="toggle">Reveal</button>
+            <button type="button" data-action="toggle">Open File</button>
           </div>
         </article>
       `;
@@ -1829,11 +1850,11 @@ function toggleCard(card) {
   if (isRevealed) {
     badge.className = `badge ${entry.team}`;
     badge.textContent = entry.team === "zombie" ? "Zombie" : "Citizen";
-    toggleButton.textContent = "Hide";
+    toggleButton.textContent = "Seal File";
   } else {
     badge.className = "badge hidden";
-    badge.textContent = "Hidden";
-    toggleButton.textContent = "Reveal";
+    badge.textContent = "Sealed";
+    toggleButton.textContent = "Open File";
   }
 }
 
@@ -1844,10 +1865,10 @@ function hideAllCards() {
     const button = card.querySelector('[data-action="toggle"]');
     if (badge) {
       badge.className = "badge hidden";
-      badge.textContent = "Hidden";
+      badge.textContent = "Sealed";
     }
     if (button) {
-      button.textContent = "Reveal";
+      button.textContent = "Open File";
     }
   });
 }
@@ -1865,7 +1886,7 @@ function revealAllCards() {
       badge.textContent = entry.team === "zombie" ? "Zombie" : "Citizen";
     }
     if (button) {
-      button.textContent = "Hide";
+      button.textContent = "Seal File";
     }
   });
 }
@@ -3208,6 +3229,8 @@ function updateNightAudioButton() {
   const selectedPreset = selectedAmbiencePreset();
   const isActive = Boolean(state.nightAudio && state.nightAudio.preset?.id === selectedPreset.id && !state.nightAudio.isPaused);
   const isPaused = Boolean(state.nightAudio && state.nightAudio.preset?.id === selectedPreset.id && state.nightAudio.isPaused);
+  dom.nightAudioBox?.classList.toggle("active", isActive);
+  dom.nightAudioBox?.classList.toggle("paused", isPaused);
 
   dom.startNight.innerHTML = "&#9654; Play Background Audio";
   dom.startNight.classList.toggle("active", isActive);
