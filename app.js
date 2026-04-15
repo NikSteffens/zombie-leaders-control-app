@@ -99,14 +99,16 @@ const AMBIENT_PRESETS = [
     name: "Mozart - Requiem",
     engine: "recording",
     gain: 0.58,
-    audioSrc: "assets/audio/mozart-requiem-lacrimosa.ogg",
+    audioSources: ["assets/audio/mozart-requiem-lacrimosa.ogg"],
+    fallbackPresetId: "graveyard-drizzle",
   },
   {
     id: "moonlight-sonata",
     name: "Beethoven - Moonlight Sonata",
     engine: "recording",
     gain: 0.55,
-    audioSrc: "assets/audio/moonlight-sonata.ogg",
+    audioSources: ["assets/audio/moonlight-sonata.ogg"],
+    fallbackPresetId: "graveyard-drizzle",
   },
   {
     id: "graveyard-drizzle",
@@ -581,6 +583,16 @@ function handleTimerWarningChange() {
 
 function renderTimerVoiceChoices() {
   if (!dom.timerVoiceChoices) return;
+  const availableVoiceIds = VOICE_OPTIONS
+    .filter((option) => isVoiceOptionAvailable(option))
+    .map((option) => option.id);
+
+  if (availableVoiceIds.length && !availableVoiceIds.includes(state.timer.voiceId)) {
+    state.timer.voiceId = availableVoiceIds.includes(DEFAULT_TIMER_WARNING_VOICE_ID)
+      ? DEFAULT_TIMER_WARNING_VOICE_ID
+      : availableVoiceIds[0];
+  }
+
   dom.timerVoiceChoices.querySelectorAll("[data-timer-voice-id]").forEach((button) => {
     const voiceId = button.dataset.timerVoiceId;
     const isActive = voiceId === state.timer.voiceId;
@@ -588,7 +600,7 @@ function renderTimerVoiceChoices() {
     button.classList.toggle("active", isActive);
     button.classList.toggle("unavailable", !isAvailable);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
-    button.disabled = false;
+    button.disabled = !isAvailable && state.voices.length > 0;
   });
 }
 
@@ -690,8 +702,13 @@ function tickCountdownTimer() {
   state.timer.isRunning = false;
   state.timer.remainingMs = 0;
   syncCountdownTimerUI();
-  startTimerSiren({ mode: "alert" });
-  setTimerStatus("Time expired. Air raid siren active.", true);
+  const sirenStarted = startTimerSiren({ mode: "alert" });
+  setTimerStatus(
+    sirenStarted
+      ? "Time expired. Air raid siren active."
+      : "Time expired. Air raid siren is unavailable in this browser.",
+    true
+  );
 }
 
 function handleTimerWarningThresholds(previousMs, nextMs) {
@@ -765,8 +782,10 @@ function applyTimerSirenVolume(sirenState = state.timerSiren) {
 }
 
 function playTimerSirenDemo() {
-  startTimerSiren({ mode: "demo", durationMs: 3500 });
-  setTimerStatus("Playing siren demo.");
+  const started = startTimerSiren({ mode: "demo", durationMs: 3500 });
+  if (started) {
+    setTimerStatus("Playing siren demo.");
+  }
 }
 
 function startTimerSiren(options = {}) {
@@ -775,7 +794,7 @@ function startTimerSiren(options = {}) {
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextCtor) {
     setTimerStatus("Web Audio API is not available in this browser.", true);
-    return;
+    return false;
   }
 
   const context = new AudioContextCtor();
@@ -811,7 +830,11 @@ function startTimerSiren(options = {}) {
 
   state.timerSiren = sirenState;
   applyTimerSirenVolume(sirenState);
-  context.resume().catch(() => {});
+  context.resume().catch(() => {
+    if (state.timerSiren !== sirenState) return;
+    stopTimerSiren({ silent: true });
+    setTimerStatus("Air raid siren was blocked by this browser.", true);
+  });
   syncCountdownTimerUI();
 
   if (options.durationMs) {
@@ -821,6 +844,8 @@ function startTimerSiren(options = {}) {
       setTimerStatus("Siren demo ended.");
     }, options.durationMs);
   }
+
+  return true;
 }
 
 function stopTimerSiren(options = {}) {
@@ -1288,8 +1313,16 @@ function parsePlayers(raw) {
   if (!input) return [];
 
   const delimiterPattern = /[\n,;]+/;
-  const names = (delimiterPattern.test(input) ? input.split(delimiterPattern) : input.split(/\s+/))
+  const normalizedInput = input.replace(/[“”]/g, "\"");
+  const names = (
+    delimiterPattern.test(normalizedInput)
+      ? normalizedInput.split(delimiterPattern)
+      : normalizedInput.includes("\"")
+      ? Array.from(normalizedInput.matchAll(/"([^"]+)"|(\S+)/g), (match) => match[1] || match[2] || "")
+      : normalizedInput.split(/\s+/)
+  )
     .map((name) => name.trim())
+    .map((name) => name.replace(/^"(.*)"$/, "$1").trim())
     .filter(Boolean);
   const seen = new Set();
   return names.filter((name) => {
@@ -1615,6 +1648,11 @@ function buildScripts(assignments, activeRoles) {
   }
 
   const night = [SCRIPT_TEXT.night[0]];
+  if (roleIds.has("sycophant")) {
+    night.push(
+      "We have a Sycophant who is secretly working towards a Zombie Leader victory unbeknownst to both the Zombie Leaders and the Organizational Citizens. If the Zombie Leaders win, the Sycophant wins too."
+    );
+  }
   if (roleIds.has("training-supervisor")) {
     night.push(SCRIPT_TEXT.night[1]);
     night.push(SCRIPT_PAUSE_MARKER);
@@ -1965,9 +2003,10 @@ function buildVoiceAssignments(options, voices) {
 
   options.forEach((option) => {
     if (assignments.has(option.id)) return;
-    const fallbackVoice = remainingVoices.shift() || pickBestVoice(preferredPool);
+    const fallbackVoice = remainingVoices.shift();
     if (fallbackVoice) {
       assignments.set(option.id, fallbackVoice);
+      usedVoiceKeys.add(getVoiceKey(fallbackVoice));
     }
   });
 
@@ -2006,7 +2045,7 @@ function filterPreferredVoices(voices) {
 
 function resolveUsableVoiceForOption(option) {
   if (!option || option.kind !== "local") return null;
-  return state.voiceMap.get(option.id) || pickBestVoice(state.voices) || null;
+  return state.voiceMap.get(option.id) || null;
 }
 
 function canUseBrowserSpeechFallback() {
@@ -2089,7 +2128,9 @@ function renderVoiceChoiceGroup(container) {
 }
 
 function isVoiceOptionAvailable(option) {
-  return Boolean(option && (resolveUsableVoiceForOption(option) || canUseBrowserSpeechFallback()));
+  if (!option) return false;
+  if (resolveUsableVoiceForOption(option)) return true;
+  return !state.voices.length && canUseBrowserSpeechFallback();
 }
 
 function isSelectedVoiceAvailable() {
@@ -2100,7 +2141,8 @@ function getVoiceOptionMeta(option) {
   if (!option) return "";
   const voice = resolveUsableVoiceForOption(option);
   if (!voice) {
-    return canUseBrowserSpeechFallback() ? "Browser default" : "Unavailable on this device";
+    if (!canUseBrowserSpeechFallback()) return "Unavailable on this device";
+    return state.voices.length ? "Unavailable on this device" : "Loading device voice...";
   }
   if (voice.name && voice.name.toLowerCase() !== option.name.toLowerCase()) {
     return `${voice.name} · ${voice.lang || "en"}`;
@@ -2111,6 +2153,9 @@ function getVoiceOptionMeta(option) {
 function getVoiceUnavailableReason(option) {
   if (!option) return "Select a voice first.";
   if (!canUseBrowserSpeechFallback()) return getSpeechUnsupportedMessage();
+  if (state.voices.length) {
+    return "This device does not offer a distinct compatible voice for this button.";
+  }
   return "No compatible text-to-speech voice is available on this computer.";
 }
 
@@ -2135,14 +2180,16 @@ function buildVoiceDiagnosticMarkup() {
   }
 
   const note = !state.voices.length
-    ? "Your browser can still speak, but the device voice list has not loaded yet. If you press play now, the browser default voice will be used."
+    ? "Your browser can still speak, but the device voice list has not loaded yet. Voice buttons will finish mapping as soon as the device voices become available."
     : "These are the actual browser voices currently mapped to the three voice buttons.";
 
   const items = VOICE_OPTIONS.map((option) => {
     const voice = resolveUsableVoiceForOption(option);
     const label = voice
       ? `${voice.name || "Browser default"}${voice.lang ? ` (${voice.lang})` : ""}`
-      : "Browser default voice";
+      : state.voices.length
+      ? "Unavailable on this device"
+      : "Loading device voice...";
     return `
       <li>
         <span class="voice-diagnostic-label">${escapeHtml(option.name)}</span>
@@ -2235,7 +2282,7 @@ function splitSpeechChunks(text) {
   const cleaned = String(text || "").replace(/\s+/g, " ").trim();
   if (!cleaned) return [];
 
-  const sentenceChunks = cleaned.split(/(?<=[.!?])\s+/).filter(Boolean);
+  const sentenceChunks = splitTextAtBoundaryPunctuation(cleaned, [".", "!", "?"]);
   return sentenceChunks.flatMap((chunk) => splitLongSpeechChunk(chunk));
 }
 
@@ -2245,7 +2292,7 @@ function splitLongSpeechChunk(chunk) {
   const words = cleaned.split(/\s+/).filter(Boolean);
   if (words.length <= 18) return [cleaned];
 
-  const clauseChunks = cleaned.split(/(?<=[,;:—])\s+/).filter(Boolean);
+  const clauseChunks = splitTextAtBoundaryPunctuation(cleaned, [",", ";", ":", "—"]);
   if (clauseChunks.length > 1) {
     return clauseChunks.flatMap((part) => splitLongSpeechChunk(part));
   }
@@ -2255,6 +2302,44 @@ function splitLongSpeechChunk(chunk) {
     words.slice(0, midpoint).join(" "),
     words.slice(midpoint).join(" "),
   ].filter(Boolean);
+}
+
+function splitTextAtBoundaryPunctuation(text, boundaries = []) {
+  const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+  if (!cleaned) return [];
+
+  const boundarySet = new Set(boundaries);
+  const parts = [];
+  let buffer = "";
+
+  for (let index = 0; index < cleaned.length; index += 1) {
+    const character = cleaned[index];
+    const nextCharacter = cleaned[index + 1] || "";
+    buffer += character;
+
+    if (!boundarySet.has(character)) {
+      continue;
+    }
+
+    if (nextCharacter && !/\s/.test(nextCharacter)) {
+      continue;
+    }
+
+    if (buffer.trim()) {
+      parts.push(buffer.trim());
+    }
+    buffer = "";
+
+    while (index + 1 < cleaned.length && /\s/.test(cleaned[index + 1])) {
+      index += 1;
+    }
+  }
+
+  if (buffer.trim()) {
+    parts.push(buffer.trim());
+  }
+
+  return parts;
 }
 
 function playScript(type) {
@@ -2296,6 +2381,24 @@ function speakLines(lines, options = {}) {
 
   const voiceOption = selectedVoiceOption();
   if (!isVoiceOptionAvailable(voiceOption)) {
+    const mappedFallbackOption = VOICE_OPTIONS.find((option) => resolveUsableVoiceForOption(option));
+    if (mappedFallbackOption) {
+      state.selectedVoiceId = mappedFallbackOption.id;
+      renderVoiceChoices();
+      syncScriptPlaybackUI();
+      setAudioStatus(
+        `${voiceOption.name} is unavailable on this device. Switching to ${mappedFallbackOption.name}.`,
+        true
+      );
+      speakLinesWithLocalVoice(lines, options, mappedFallbackOption);
+      return;
+    }
+
+    if (!state.voices.length) {
+      speakLinesWithLocalVoice(lines, options, voiceOption);
+      return;
+    }
+
     setAudioStatus(`${voiceOption.name} is not ready yet. ${getVoiceUnavailableReason(voiceOption)}`, true);
     return;
   }
@@ -2313,7 +2416,7 @@ function speakLinesWithLocalVoice(lines, options = {}, voiceOption) {
     startSegmentIndex = 0,
   } = options;
   const sessionId = state.speechSessionId;
-  let chosenVoice = selectedLocalVoice();
+  let chosenVoice = resolveUsableVoiceForOption(voiceOption);
   let chosenVoiceId = voiceOption.id;
   const rate = Number(dom.voiceRate.value);
   const segmentsToSpeak = fullSegments.slice(startSegmentIndex);
@@ -2816,10 +2919,7 @@ function buildSpeechSegments(lines = []) {
       return;
     }
 
-    const parts = String(line || "")
-      .split(/(?<=[.!?])\s+|(?<=;)\s+|(?<=:)\s+/)
-      .map((part) => part.trim())
-      .filter(Boolean);
+    const parts = splitTextAtBoundaryPunctuation(String(line || ""), [".", "!", "?", ";", ":"]);
 
     if (!parts.length) return;
     parts.forEach((part) => {
@@ -2910,12 +3010,11 @@ function handleAmbienceChange() {
     return;
   }
   const preset = selectedAmbiencePreset();
-  if (preset.id === state.nightAudio.preset?.id) {
+  if (preset.id === (state.nightAudio.requestedPresetId || state.nightAudio.preset?.id)) {
     updateNightAudioButton();
     return;
   }
   startNightAudio(preset);
-  setAudioStatus(`Background audio switched to "${preset.name}".`);
 }
 
 function selectedAmbiencePreset() {
@@ -2925,6 +3024,58 @@ function selectedAmbiencePreset() {
     AMBIENT_PRESETS.find((preset) => preset.id === DEFAULT_AMBIENCE_ID) ||
     AMBIENT_PRESETS[0]
   );
+}
+
+function getRecordedAudioSources(preset) {
+  if (!preset) return [];
+  const sources = [];
+  if (Array.isArray(preset.audioSources)) {
+    sources.push(...preset.audioSources.filter(Boolean));
+  }
+  if (preset.audioSrc) {
+    sources.push(preset.audioSrc);
+  }
+  return [...new Set(sources)];
+}
+
+function getAudioMimeTypeFromPath(path) {
+  const lower = String(path || "").toLowerCase();
+  if (lower.endsWith(".mp3")) return "audio/mpeg";
+  if (lower.endsWith(".m4a") || lower.endsWith(".mp4")) return "audio/mp4";
+  if (lower.endsWith(".ogg") || lower.endsWith(".oga")) return "audio/ogg; codecs=\"vorbis\"";
+  if (lower.endsWith(".wav")) return "audio/wav";
+  return "";
+}
+
+function selectCompatibleRecordedAudioSource(preset) {
+  const sources = getRecordedAudioSources(preset);
+  if (!sources.length) return null;
+
+  const probe = document.createElement("audio");
+  if (typeof probe.canPlayType !== "function") {
+    return null;
+  }
+
+  return (
+    sources.find((source) => {
+      const mimeType = getAudioMimeTypeFromPath(source);
+      return Boolean(mimeType && probe.canPlayType(mimeType) !== "");
+    }) || null
+  );
+}
+
+function buildRecordedAudioFallbackPreset(preset) {
+  const fallbackPresetId = preset?.fallbackPresetId;
+  if (!fallbackPresetId) return null;
+  const fallbackPreset = AMBIENT_PRESETS.find((entry) => entry.id === fallbackPresetId);
+  if (!fallbackPreset) return null;
+  return {
+    ...fallbackPreset,
+    id: preset.id,
+    name: preset.name,
+    requestedPresetId: preset.id,
+    fallbackPresetName: fallbackPreset.name,
+  };
 }
 
 function updateBackgroundVolumeReadout() {
@@ -3001,9 +3152,24 @@ function startNightAudio(preset) {
   stopSpeech();
   stopNightAudio();
 
-  if (preset?.audioSrc) {
-    startRecordedNightAudio(preset);
+  const compatibleRecordedSource = selectCompatibleRecordedAudioSource(preset);
+  if (compatibleRecordedSource) {
+    startRecordedNightAudio(preset, compatibleRecordedSource);
     return;
+  }
+
+  const recordedSources = getRecordedAudioSources(preset);
+  if (recordedSources.length) {
+    const fallbackPreset = buildRecordedAudioFallbackPreset(preset);
+    if (!fallbackPreset) {
+      setAudioStatus(`Background audio "${preset.name}" is not supported in this browser.`, true);
+      return;
+    }
+    setAudioStatus(
+      `Background audio "${preset.name}" is not supported in this browser. Using "${fallbackPreset.fallbackPresetName}" instead.`,
+      true
+    );
+    preset = fallbackPreset;
   }
 
   const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
@@ -3017,7 +3183,7 @@ function startNightAudio(preset) {
   master.connect(context.destination);
 
   const engineCleanup = startAmbienceEngine(context, master, preset);
-  const audioState = createNightAudioState(preset);
+  const audioState = createNightAudioState(preset, preset.requestedPresetId || preset?.id);
   audioState.baseGain = preset?.gain ?? 0.22;
   audioState.masterGain = master;
   applyBackgroundVolume(audioState);
@@ -3051,19 +3217,29 @@ function startNightAudio(preset) {
   };
 
   state.nightAudio = audioState;
+  context.resume().catch(() => {
+    if (state.nightAudio !== audioState) return;
+    audioState.stop();
+    state.nightAudio = null;
+    updateNightAudioButton();
+    syncNightAudioUI();
+    setAudioStatus(`Background audio "${preset.name}" was blocked by this browser.`, true);
+  });
   armNightAudioUi(audioState);
   updateNightAudioButton();
   syncNightAudioUI();
 
-  setAudioStatus(`Background audio "${preset.name}" playing continuously.`);
+  if (!preset.fallbackPresetName) {
+    setAudioStatus(`Background audio "${preset.name}" playing continuously.`);
+  }
 }
 
-function startRecordedNightAudio(preset) {
-  const audio = new Audio(preset.audioSrc);
+function startRecordedNightAudio(preset, audioSrc) {
+  const audio = new Audio(audioSrc);
   audio.loop = true;
   audio.preload = "auto";
 
-  const audioState = createNightAudioState(preset);
+  const audioState = createNightAudioState(preset, preset?.id);
   audioState.baseGain = preset?.gain ?? 0.55;
   audioState.audioElement = audio;
   applyBackgroundVolume(audioState);
@@ -3144,9 +3320,10 @@ function stopNightAudio() {
   setAudioStatus("Background audio stopped.");
 }
 
-function createNightAudioState(preset) {
+function createNightAudioState(preset, requestedPresetId = preset?.id || "") {
   return {
     preset,
+    requestedPresetId,
     startedAt: performance.now(),
     timerId: 0,
     uiTimerId: 0,
@@ -3227,8 +3404,9 @@ function updateNightAudioButton() {
   if (!dom.startNight || !dom.pauseNight) return;
 
   const selectedPreset = selectedAmbiencePreset();
-  const isActive = Boolean(state.nightAudio && state.nightAudio.preset?.id === selectedPreset.id && !state.nightAudio.isPaused);
-  const isPaused = Boolean(state.nightAudio && state.nightAudio.preset?.id === selectedPreset.id && state.nightAudio.isPaused);
+  const requestedPresetId = state.nightAudio?.requestedPresetId || state.nightAudio?.preset?.id;
+  const isActive = Boolean(state.nightAudio && requestedPresetId === selectedPreset.id && !state.nightAudio.isPaused);
+  const isPaused = Boolean(state.nightAudio && requestedPresetId === selectedPreset.id && state.nightAudio.isPaused);
   dom.nightAudioBox?.classList.toggle("active", isActive);
   dom.nightAudioBox?.classList.toggle("paused", isPaused);
 

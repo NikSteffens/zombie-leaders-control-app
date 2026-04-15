@@ -1,3 +1,35 @@
+@font-face {
+  font-family: "Creepster";
+  src: url("assets/fonts/Creepster-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("assets/fonts/BarlowCondensed-500.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("assets/fonts/BarlowCondensed-600.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Barlow Condensed";
+  src: url("assets/fonts/BarlowCondensed-700.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
   --bg-deep: #070d17;
   --bg-mid: #0f1f1f;
@@ -2048,6 +2080,15 @@ button.danger {
     max-width: none;
   }
 
+  textarea,
+  input[type="number"],
+  input[type="password"],
+  select {
+    min-height: 2.95rem;
+    padding: 0.72rem 0.78rem;
+    font-size: 0.98rem;
+  }
+
   .roles-grid,
   .voice-choices,
   .cards-grid,
@@ -2091,6 +2132,16 @@ button.danger {
     flex-basis: 2.75rem;
   }
 
+  .count-toggle {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .count-choice {
+    flex: 1 1 0;
+    text-align: center;
+  }
+
   .role-item {
     padding: 0.62rem 0.68rem;
   }
@@ -2118,6 +2169,21 @@ button.danger {
   .audio-control-grid {
     grid-template-columns: 1fr;
     gap: 0.8rem;
+  }
+
+  .warning-options {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .warning-option {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .switch {
+    align-items: flex-start;
+    line-height: 1.45;
   }
 
   .night-box,
