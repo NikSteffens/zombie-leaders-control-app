@@ -22,6 +22,20 @@ const SCRIPT_PAUSE_2S_MARKER = "__SCRIPT_PAUSE_2S__";
 const SCRIPT_TYPES = ["orientation", "intro", "day", "night"];
 const LESSON_TYPES = ["lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6"];
 const PANEL_TYPES = [...SCRIPT_TYPES, ...LESSON_TYPES];
+const DEFAULT_SELECTED_VOICE_ID = "alex-recorded";
+const RECORDED_VOICE_SUPPORT = Object.freeze({
+  UNKNOWN: "unknown",
+  CHECKING: "checking",
+  SUPPORTED: "supported",
+  UNSUPPORTED: "unsupported",
+});
+const RECORDED_AUDIO_MIME_TYPES = Object.freeze([
+  'audio/mp4; codecs="mp4a.40.2"',
+  "audio/mp4",
+  "audio/x-m4a",
+  "audio/aac",
+  "audio/mpeg",
+]);
 const SCRIPT_LABELS = Object.freeze({
   orientation: "Orientation",
   intro: "Introduction",
@@ -35,6 +49,22 @@ const SCRIPT_LABELS = Object.freeze({
   lesson6: "Takeaway 6",
 });
 const VOICE_OPTIONS = Object.freeze([
+  {
+    id: "alex-recorded",
+    name: "Alex",
+    kind: "recorded",
+    recordingSet: "alex",
+    sourceLabel: "Bundled recording",
+    image: "01_thumbnail icons/Departmental Administrator M30.png",
+  },
+  {
+    id: "zoe-recorded",
+    name: "Zoe",
+    kind: "recorded",
+    recordingSet: "zoe",
+    sourceLabel: "Bundled recording",
+    image: "01_thumbnail icons/Departmental Administrator F30.png",
+  },
   {
     id: "daniel",
     name: "Daniel",
@@ -287,68 +317,105 @@ const ROLE_ICON_META = Object.freeze({
   },
 });
 
-const SCRIPT_TEXT = {
-  orientation: [
-    "Welcome to Happy Days Corporation (HDC) — an organization where we like to put the smile on everyone’s faces and keep it there. I’m the Departmental Administrator and my goal is to make your time here as fulfilling and rewarding as possible. Unfortunately, as you are about to find out, there are some extreme structural constraints that limit my ability to do this. Historically, as our name suggests, we have been a very happy organization. Our leaders worked hard to create, advance, represent and embed a sense of shared identity among employees. As a result, this was a place where people enjoyed their work and were both healthy and productive. But HDC has recently been going through a tough time. Things started going downhill after some of our senior executives went on a shonky Leadership Development course last year. This led to them being infected with a toxic mindset that researchers have identified as arising from an approach to management known as ZOMBIE LEADERSHIP.",
-    "Devotees of Zombie Leadership — known as Zombie Leaders — are committed to the idea that leaders are inherently superior to everyone else and hence that they are natural leaders. They think that everything they do is right, that they alone know how best to do things, that everyone can see how wonderful they are, and that they should be extravagantly rewarded for the work they do. Sadly, HDC now has a number of Zombie Leaders in its top ranks. Precisely how many there are of them is unknown — but they are in the process of destroying our organization. If the Zombie Leaders destroy the organization, they will have won.",
-    "But the good news is, there are still plenty of decent, sensible people working here.",
-    "Finally, we have a number of Organizational Citizens. They are the backbone of HDC and they have been serving the company loyally for a great many years. We are grateful for their service but mindful that the Zombie Leaders are always looking for ways to reduce their ranks — while at the same time taking credit for everything they achieve.",
-    "The big question, then, is whether we can save ourselves from the impending Zombie Leadership Apocalypse. Let us not go quietly into that dark night.",
-  ],
-  intro: [
-    "The first thing I’d like to do is work out what role everyone has, because, after the last restructure that the Zombie Leaders initiated everyone — including me — is very confused. And because some of this information is secret, I’d also like everyone to close your eyes. First, I’d like the Zombie Leaders to open your eyes and acknowledge each other.",
-    "You are dirtbags and proud of it.",
-    "Now please close your eyes.",
-    "Now could the Sycophant please open your eyes and look at me. Now Zombie Leaders please keep your eyes closed but just raise your hands.",
-    "Sycophant, take note of the Zombie Leaders with their hands raised. Now Zombie Leaders please put your hands down. Sycophant please close your eyes and do your worst.",
-    "Now could the Integrity Officer open your eyes and look at me please. Thank you and good luck. Please close your eyes.",
-    "Now could the Personnel Manager please open your eyes and look at me. Thank you and good luck. Please close your eyes.",
-    "Now IT Specialist open your eyes and look at me please. Thank you and good luck. Please close your eyes.",
-    "Now could the Training Supervisor open your eyes and look at me please. Thank you and good luck. Please close your eyes.",
-    "Now could the Schoßhündchen (Boss’s Pet) open your eyes and look at me please. Thank you and good luck. Please close your eyes.",
-    "Now could the Social Club Organiser open your eyes and look at me please. Thank you and good luck. Please close your eyes.",
-    "Now could the Office Gossip open your eyes and look at me please. Thank you and good luck. Please close your eyes.",
-    "Now could the Matchmaker open your eyes and look at me. Can you point to two people who you would like to fall in love with each other?",
-    "Thank you — you can close your eyes. Now if I tap you on the knee, please open your eyes and gaze upon your new life partner. Your fates will now be inextricably intertwined — so if one of you leaves us, the other will too.",
-    "Now please close your eyes and commit yourselves to a future in which you are bound together in perpetuity.",
-    "Now could the Union Reps open your eyes and identify each other. You have a difficult job ahead of you and you will need to work as a united force. Your strength lies in your solidarity and your unwavering commitment to the AntiZombie Leadership Alliance. Remember, you are fighting for fairness, for dignity, and for a better future — but you can never speak of this endeavour. Thank you. And now please close your eyes.",
-    "Finally, could the Organizational Citizens please keep your eyes closed and raise your hands so that I can see who you are?",
-    "Thank you.",
-    "We are now ready to get to work.",
-    "This is a new day at Happy Days Corporation and the first thing I’d like you to do is elect a Head of Department. This person is going to be in charge of your meetings and they will also have the deciding vote if any votes are tied. So, as always, you need to choose this leader wisely.",
-  ],
-  day: [
-    "We would like you to have a discussion to see if there is anyone you would like to remove from the organization because you suspect them of being a Zombie Leader. You can also choose not to remove anyone, but that decision must be unanimous. This will be the last thing we do today before we go to bed.",
-    "Now I know it’s been a long day and that everyone is very tired, but before you go home we need to make plans for tomorrow. I’d also like you to close your eyes so that we can do this in private.",
-    "Integrity Officer please open your eyes and tell me whose CV you would like to take home to have a look at.",
-    "Thank you. Please close your eyes.",
-    "Personnel Manager please open your eyes and indicate whose career you would like to save from attack by Zombie Leaders tonight.",
-    "Thank you. Please close your eyes.",
-    "Now IT Specialist please open your eyes and let me know if you would like to use your one chance to save the person who is going to be targeted by the Zombie Leaders tonight. Do you want to use your one chance to get rid of someone?",
-    "Thank you. Now please close your eyes.",
-  ],
-  night: [
-    "The day has faded into night.",
-    "Could the Training Supervisor open your eyes and let me know who you would like to send on mandatory training tomorrow. Tomorrow’s course promises to be very exciting and is on",
-    "Thank you. Please close your eyes.",
-    "Now could the Social Club Organiser open your eyes and let me know if you want to use your one chance to go on a 24-hour excursion and, if so, who you would like to take with you.",
-    "Thank you. Please close your eyes.",
-    "Now could the Office Gossip please open your eyes and look at me. If your career is destroyed by the Zombie Leaders tonight, is there anyone you would like to take down with you?",
-    "Thank you. Please close your eyes.",
-    "Now, finally, could the Intern open your eyes and let me know who, if anyone, you would like to have as your mentor for the next 24 hours.",
-    "Thank you. Please close your eyes.",
-    "Thank you everyone for your work today. It’s now time for everyone to get a good night’s rest, as it’s going to be another busy day tomorrow.",
-    "So please close your eyes.",
-    "It’s now time for the Zombie Leaders to get to work.",
-    "Zombie Leaders, open your eyes. Your task is to identify one person whose position in HDC you will terminate (typically someone you see as the greatest threat, or to throw the Organizational Citizens off your scent). Please remain silent and use only non-verbal communication to agree on your next victim. Once you have reached an agreement, silently point to the person you wish to remove from the organization.",
-    "Thank you. Please close your eyes.",
-    "Now everyone, enjoy the rest of the night.",
-  ],
-};
+const SCRIPT_SEGMENT_TEXT = Object.freeze({
+  orientation: Object.freeze({
+    N1: "Welcome to Happy Days Corporation (HDC) — an organization where we like to put smiles on everyone’s faces and keep them there. Today, I’m working alongside the Departmental Administrator and our goal is to make your time at HDC as fulfilling and rewarding as possible. Unfortunately, as you are about to find out, there are some extreme structural constraints that limit our ability to do this. Historically, as our name suggests, we have been a very happy organization. Our leaders worked hard to create, advance, represent and embed a sense of shared identity — as sense of ‘we-ness’ — among employees. As a result, this was a place where people enjoyed their work and were both healthy and productive. But HDC has recently been going through a tough time. Things started going downhill after some of our senior executives went on a shonky Leadership Development course last year. This led to them being infected with a toxic mindset that researchers have identified as arising from an approach to management known as Zombie Leadership. Devotees of Zombie Leadership — known as Zombie Leaders — are committed to the idea that leaders are inherently superior to everyone else and hence that they are natural leaders. They think that everything they do is right, that they alone know how best to do things, that everyone can see how wonderful they are, and that they should be extravagantly rewarded for the work they do. Sadly, HDC now has a number of Zombie Leaders in its top ranks and they are in the process of destroying our organization. If the Zombie Leaders destroy the organization, they will have won.",
+    O1: "We have a great Integrity Officer, who can view one person's CV each morning to see if they are a Zombie Leader.",
+    O2: "We have a great Personnel Manager who can identify one person every day that they will protect from attack by the Zombie Leaders. They can choose to protect themselves, but they must choose a different person every day.",
+    O3: "We have a very cluey IT Specialist who can hack the IT system twice in the course of the game — once to get rid of someone they suspect of being a Zombie Leader; once to save someone they want to protect from the Zombie Leaders.",
+    O4: "We have a Matchmaker who is keen to cultivate office romance and who is going to weave their magic to make two members of HDC fall in love. This, though, means that if one of these two Lovers leaves the organization (for whatever reason) the other will too.",
+    O5: "Defending everyone’s rights, we also have some Union Reps. They will be known to each other and will act in solidarity to defend us from the Zombie Leaders. However, because the Zombie Leaders are very vindictive, if the Union Reps ever reveal — or even hint at —their identity they will be instantly dismissed. And if anyone else hints at the Union Reps’ identity they too will be fired.",
+    O6: "We also have a very enthusiastic Training Supervisor. They take their job seriously and every day will be send one person off to complete mandatory training. There are a range of courses that people will be completing — covering everything from Managing Conflicts of Interest and Respectful Relationships in the Workplace to Fire Safety. These courses were mandated by the Zombie Leaders, but, as you’ll discover, they don’t pay much attention to them themselves.",
+    O7: "There is also one member of HDC who is the Schoßhündchen (the Boss’s Pet). They are protected by one of the non-zombie senior managers, and this means that they will not lose their position the first time that the Zombie Leaders target them.",
+    O8: "Happily, we also have an Intern. Every day they can, if they want, decide to spend time with a Mentor of their choosing. This means that if they are targeted by the Zombie Leaders that night, they won’t be terminated. However, if their mentor is terminated, the intern will be terminated along with them.",
+    O9: "We also have a very enthusiastic Office Gossip. They have the dirt on everybody at HDC and if they are targeted by the Zombie Leaders they will not necessarily go quietly — and can take someone else down with them in retaliation if they so desire.",
+    O10: "In light of the increasing job demands that the Zombie Leaders are placing on us, we are also lucky to have a Social Club Organizer. In a round of their choosing they can set up a social club for themselves and up to three other people in HDC. Due to the well-evidenced socially curative effects of group memberships,, this protects them all from being harmed by the Zombie Leaders in that round.",
+    N2: "But the good news is, there are still plenty of decent, sensible people working here and they are trying very hard to stave off the Zombie Leadership Apocalypse. Finally, we have a number of Organizational Citizens. They are the backbone of HDC and they have been serving the company loyally for a great many years. We are grateful for their service but mindful that the Zombie Leaders are always looking for ways to reduce their ranks — while at the same time taking credit for everything they achieve. The big question, then, is whether we can save ourselves from the impending Zombie Leadership Apocalypse. Let us not go quietly into that dark night.",
+  }),
+  intro: Object.freeze({
+    N3: "The first thing I’d like to do is work out what role everyone has, because, after the last restructure that the Zombie Leaders initiated everyone — including me — is very confused. And because some of this information is secret, I’d also like everyone to close your eyes. First, I’d like the Zombie Leaders to open your eyes and acknowledge each other. You are dirtbags and proud of it. Now please close your eyes.",
+    O11: "Now could the Sycophant please open your eyes and look at me. Now Zombie Leaders please keep your eyes closed but just raise your hands. Sycophant, take note of the Zombie Leaders with their hands raised. Now Zombie Leaders please put your hands down. Sycophant please close your eyes and do your worst.",
+    O12: "Now could the Integrity Officer open your eyes and look at me please. Thank you and stay strong. Please close your eyes.",
+    O13: "Now could the Personnel Manager please open your eyes and look at me. Thank you and good luck. Please close your eyes.",
+    O14: "Could the IT Specialist open your eyes and look at me please. Thank you and happy hacking. Now please close your eyes.",
+    O15: "Now could the Training Supervisor open your eyes and look at me please. Thank you and may your guidance be enlightening. Please close your eyes.",
+    O16: "Now could the Schoßhündchen (Boss’s Pet) open your eyes and look at me please. Thank you. Know that you are loved. Now please close your eyes.",
+    O17: "Could the Social Club Organiser now open your eyes and look at me please. Thank you and have fun. Please close your eyes.",
+    O18: "Now could the Office Gossip open your eyes and look at me please. Thank you and go get that dirt. Please close your eyes.",
+    O19: "Now could the Intern open your eyes and look at me please. Thank you and enjoy your internships. Please close your eyes.",
+    O20: "Now could the Matchmaker open your eyes and look at me. Can you point to two people who you would like to fall in love with each other? After two people have been identified, announce: Thank you — you can close your eyes. Now if I tap you on the knee, please open your eyes and gaze upon your new life partner. Your fates will now be inextricably intertwined — so if one of you leaves us, the other will too. Walk around and tap the two Lovers on the knee while also ensuring that it is not obvious who you have touched. Now please close your eyes and commit yourselves to a future in which you are bound together in perpetuity.",
+    O21: "Now could the Union Reps open your eyes and identify each other. You have a difficult job ahead of you and you will need to work together as a united force. Your strength lies in your solidarity and your unwavering commitment to the Anti-Zombie Leadership Alliance. Remember, you are fighting for fairness, for dignity, and for a better future — but you can never speak of this endeavour. And now please close your eyes.",
+    N4a: "Finally, could the Organizational Citizens please keep your eyes closed and raise your hands so that I can see who you are? Thank you for your service. We are now ready to get to work.",
+    N4b: "This is a new day at HDC and the first thing I’d like you to do is elect a Head of Department. This person is going to be in charge of your meetings and they will also have the deciding vote if any votes are tied. So, as always, you need to choose this leader wisely.",
+  }),
+  day: Object.freeze({
+    N5: "Your main task today is to have a discussion to see if there is someone you would like to remove from HDC because you suspect them of being a Zombie Leader. You can choose not to remove anyone, but that decision must be unanimous. After we have seen the consequences of your decision, it will be time to go home to bed. If you choose wisely, you should sleep more safely.",
+  }),
+  night: Object.freeze({
+    N6: "The day is fading into night. And I know it’s been a long day and that everyone is very tired, but before you go to bed, we need to do a bit more work and make some plans for tomorrow. I’d also like you to close your eyes because some of these plans need to be private.",
+    O22: "Could the Integrity Officer now open your eyes and indicate who you would like to a background check on tonight? Thank you. Now please close your eyes.",
+    O23: "Could the Personnel Manager please open your eyes and indicate whose career you would like to save from attack by Zombie Leaders tonight. Now please close your eyes.",
+    O24: "Could the IT Specialist please open your eyes and let me know if you would like to use your one chance to save someone or to terminate someone? Thank you. Now please close your eyes.",
+    O25: "Could the Training Supervisor open your eyes and let me know who you would like to send on mandatory training tomorrow. Thank you. Tomorrow’s course promises to be very exciting. Now please close your eyes.",
+    O26: "Now could the Social Club Organiser open your eyes and let me know if you want to use your one chance to take up to three people on an excursion that will protect them for a day. If you do, who you would like to take with you? Thank you. Please close your eyes.",
+    O27: "Now could the Office Gossip please open your eyes and look at me. If your career is destroyed by the Zombie Leaders tonight, is there anyone you would like to take down with you? Thank you. Now please close your eyes.",
+    O28: "Now, finally, could the Intern open your eyes and let me know who, if anyone, you would like to have as your mentor for the next 24 hours? Thank you. Now please close your eyes.",
+    O29: "We have a Sycophant who is secretly working towards a Zombie Leader victory unbeknownst to both the Zombie Leaders and the Organisational Citizens. If the Zombie Leaders win, the Sycophant wins too.",
+    N7: "Thank you everyone for your work today. It’s now time for you to go home and get a good night’s rest, as it’s going to be another busy day tomorrow. So please could everyone close your eyes. It’s now time for the Zombie Leaders to get to work. So Zombie Leaders, open your eyes. Your task is to identify one person in HDC who you want to terminate. Once you have reached an agreement, let me know and I will prepare their off-boarding package.",
+  }),
+});
+
+const SCRIPT_COMPOSITION = Object.freeze({
+  orientation: Object.freeze([
+    { id: "N1" },
+    { id: "O1", roles: ["office-manager"] },
+    { id: "O2", roles: ["hr-lead"] },
+    { id: "O3", roles: ["it-specialist"] },
+    { id: "O4", roles: ["office-matchmaker"] },
+    { id: "O5", roles: ["union-rep"] },
+    { id: "O6", roles: ["training-supervisor"] },
+    { id: "O7", roles: ["schosshundchen"] },
+    { id: "O8", roles: ["intern"] },
+    { id: "O9", roles: ["office-gossip"] },
+    { id: "O10", roles: ["social-club-organizer"] },
+    { id: "N2" },
+  ]),
+  intro: Object.freeze([
+    { id: "N3", pauseAfter: "cue" },
+    { id: "O11", roles: ["sycophant"], pauseAfter: "cue" },
+    { id: "O12", roles: ["office-manager"], pauseAfter: "cue" },
+    { id: "O13", roles: ["hr-lead"], pauseAfter: "cue" },
+    { id: "O14", roles: ["it-specialist"], pauseAfter: "cue" },
+    { id: "O15", roles: ["training-supervisor"], pauseAfter: "cue" },
+    { id: "O16", roles: ["schosshundchen"], pauseAfter: "cue" },
+    { id: "O17", roles: ["social-club-organizer"], pauseAfter: "cue" },
+    { id: "O18", roles: ["office-gossip"], pauseAfter: "cue" },
+    { id: "O19", roles: ["intern"], pauseAfter: "cue" },
+    { id: "O20", roles: ["office-matchmaker"], pauseAfter: "cue" },
+    { id: "O21", roles: ["union-rep"], pauseAfter: "cue" },
+    { id: "N4a", pauseAfter: "cue" },
+    { id: "N4b" },
+  ]),
+  day: Object.freeze([
+    { id: "N5" },
+  ]),
+  night: Object.freeze([
+    { id: "N6" },
+    { id: "O22", roles: ["office-manager"], pauseAfter: "cue" },
+    { id: "O23", roles: ["hr-lead"], pauseAfter: "cue" },
+    { id: "O24", roles: ["it-specialist"], pauseAfter: "cue" },
+    { id: "O25", roles: ["training-supervisor"], pauseAfter: "cue" },
+    { id: "O26", roles: ["social-club-organizer"], pauseAfter: "cue" },
+    { id: "O27", roles: ["office-gossip"], pauseAfter: "cue" },
+    { id: "O28", roles: ["intern"], pauseAfter: "cue" },
+    { id: "O29", roles: ["sycophant"] },
+    { id: "N7" },
+  ]),
+});
 
 const LESSON_TEXT = Object.freeze({
   lesson1: [
-    "Standard models of human psychology don’t tell us what we need to know. In particular, knowing a lot about someone’s personality (e.g., whether they are extraverted or agreeable) doesn’t help us understand how they are going to behave in a complex organizational system that is characterised — as most are — by group division and asymmetric access to information.",
+    "Standard models of human psychology don’t tell us what we need to know. In particular, knowing a lot about someone’s personality (e.g., whether they are extraverted or agreeable) doesn’t help us understand how they are going behave in a complex organizational system that is characterised — as most are — by group division and asymmetric access to information.",
   ],
   lesson2: [
     "Reliance on zombie leadership models leads us astray. In particular, belief in great men (or women) will typically mean that we end up listening to the wrong people, while failing to heed the urgings of the ordinary group members we should really be attending to.",
@@ -366,6 +433,16 @@ const LESSON_TEXT = Object.freeze({
     "Being right is not enough. In psychological science, we often imagine that all we need to do is discover the truth and be right. But this is never enough to influence others and change the world in the ways we and the groups we identify with want it to change. To do this, we need to persuade others that we are right while also protecting ourselves against the groups who are threatened by our knowledge.",
   ],
 });
+const LESSON_RECORDING_IDS = Object.freeze({
+  lesson1: "T1",
+  lesson2: "T2",
+  lesson3: "T3",
+  lesson4: "T4",
+  lesson5: "T5",
+  lesson6: "T6",
+});
+const RECORDED_VOICE_TEST_SEGMENT = Object.freeze({ panel: "intro", id: "O12" });
+const RECORDED_VOICE_MANIFEST = Object.freeze(window.RECORDED_VOICE_MANIFEST || {});
 
 const dom = {
   authGate: document.getElementById("auth-gate"),
@@ -438,7 +515,8 @@ const state = {
   scripts: { orientation: [], intro: [], day: [], night: [] },
   voices: [],
   voiceMap: new Map(),
-  selectedVoiceId: "daniel",
+  selectedVoiceId: DEFAULT_SELECTED_VOICE_ID,
+  recordedVoiceSupport: new Map(),
   zombieLeaderSelection: Array.from({ length: MAX_ZOMBIES }, (_, index) => index < 3),
   backgroundVolumeRatio: DEFAULT_BACKGROUND_AUDIO_VOLUME_RATIO,
   narrationVolumeRatio: DEFAULT_NARRATION_VOLUME_RATIO,
@@ -480,6 +558,7 @@ function init() {
   updateBackgroundVolumeReadout();
   updateVoiceControlReadouts();
   populateVoiceList();
+  primeRecordedVoiceSupport();
   state.scripts = buildFallbackScripts();
   updateScriptViews();
   syncScriptPlaybackUI();
@@ -583,7 +662,8 @@ function handleTimerWarningChange() {
 
 function renderTimerVoiceChoices() {
   if (!dom.timerVoiceChoices) return;
-  const availableVoiceIds = VOICE_OPTIONS
+  const timerOptions = VOICE_OPTIONS.filter((option) => option.kind === "local");
+  const availableVoiceIds = timerOptions
     .filter((option) => isVoiceOptionAvailable(option))
     .map((option) => option.id);
 
@@ -596,7 +676,7 @@ function renderTimerVoiceChoices() {
   dom.timerVoiceChoices.querySelectorAll("[data-timer-voice-id]").forEach((button) => {
     const voiceId = button.dataset.timerVoiceId;
     const isActive = voiceId === state.timer.voiceId;
-    const isAvailable = isVoiceOptionAvailable(VOICE_OPTIONS.find((option) => option.id === voiceId));
+    const isAvailable = isVoiceOptionAvailable(timerOptions.find((option) => option.id === voiceId));
     button.classList.toggle("active", isActive);
     button.classList.toggle("unavailable", !isAvailable);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
@@ -1487,201 +1567,49 @@ function buildAssignments(players, zombieCount, selectedRoles) {
   return players.map((name) => allAssignments.find((entry) => entry.player === name)).filter(Boolean);
 }
 
+function shouldIncludeScriptEntry(entry, roleIds) {
+  if (!entry?.roles?.length) return true;
+  return entry.roles.some((roleId) => roleIds.has(roleId));
+}
+
+function getScriptSegmentText(panelType, segmentId) {
+  return SCRIPT_SEGMENT_TEXT[panelType]?.[segmentId] || "";
+}
+
+function buildScriptPlan(type, activeRoles = state.activeRoles) {
+  if (LESSON_TYPES.includes(type)) {
+    const lessonId = LESSON_RECORDING_IDS[type];
+    const lessonText = LESSON_TEXT[type]?.[0] || "";
+    return lessonText ? [{ id: lessonId, text: lessonText }] : [];
+  }
+
+  const roleIds = new Set((activeRoles || []).map((role) => role.id));
+  const composition = SCRIPT_COMPOSITION[type] || [];
+  const plan = [];
+
+  composition.forEach((entry) => {
+    if (!shouldIncludeScriptEntry(entry, roleIds)) return;
+    const text = getScriptSegmentText(type, entry.id);
+    if (!text) return;
+    plan.push({ id: entry.id, text });
+    if (entry.pauseAfter === "cue") {
+      plan.push({ id: `${entry.id}__pause`, text: SCRIPT_PAUSE_MARKER });
+    } else if (entry.pauseAfter === "short") {
+      plan.push({ id: `${entry.id}__pause2s`, text: SCRIPT_PAUSE_2S_MARKER });
+    }
+  });
+
+  return plan;
+}
+
+function planToScriptLines(plan = []) {
+  return plan.map((entry) => entry.text);
+}
+
 function buildScripts(assignments, activeRoles) {
-  const roleIds = new Set(activeRoles.map((role) => role.id));
-
-  const orientation = [
-    SCRIPT_TEXT.orientation[0],
-    SCRIPT_TEXT.orientation[1],
-    SCRIPT_TEXT.orientation[2],
-  ];
-
-  const orientationRoleLines = [];
-  if (roleIds.has("office-manager")) {
-    orientationRoleLines.push(
-      "We have a great Integrity Officer, who can view one person's CV each morning to see if they are a Zombie Leader."
-    );
-  }
-  if (roleIds.has("hr-lead")) {
-    orientationRoleLines.push(
-      "We also have a great Personnel Manager who can identify one person every day that they will protect from attack by the Zombie Leaders (but note that they must choose a different person every day)."
-    );
-  }
-  if (roleIds.has("it-specialist")) {
-    orientationRoleLines.push(
-      "We have a very cluey IT Specialist who can hack the IT system twice in the course of the game — once to get rid of someone they suspect of being a Zombie Leader; once to save someone they want to protect from the Zombie Leaders."
-    );
-  }
-  if (roleIds.has("office-matchmaker")) {
-    orientationRoleLines.push(
-      "We have a Matchmaker who is keen to cultivate office romance and who is going to weave their magic to make two members of HDC fall in love. However, this means that if one of these two Lovers leaves the organization (for whatever reason) the other will too. …."
-    );
-  }
-  if (roleIds.has("union-rep")) {
-    orientationRoleLines.push(
-      "Defending everyone’s rights, we also have some Union Reps. They will be known to each other and will act in solidarity to defend us from the Zombie Leaders. However, because the Zombie Leaders are very vindictive, if the Union Reps ever reveal — or even hint at —their identity they will be instantly dismissed. And if anyone else hints at the Union Reps’ identity they too will be fired."
-    );
-  }
-  if (roleIds.has("training-supervisor")) {
-    orientationRoleLines.push(
-      "We also have a very enthusiastic Training Supervisor. They take their job seriously and every day will be send one person off to complete mandatory training. There are a range of courses that people will be completing — covering everything from Managing Conflicts of Interest and Respectful Relationships in the Workplace to Fire Safety. These courses were mandated by the Zombie Leaders, but, as you’ll discover, they don’t pay much attention to them themselves."
-    );
-  }
-  if (roleIds.has("schosshundchen")) {
-    orientationRoleLines.push(
-      "There is also one member of HDC who is the Schoßhündchen (the Boss’s Pet). They are protected by one of the non-zombie senior managers, and this means that they will not lose their position the first time that the Zombie Leaders target them."
-    );
-  }
-  if (roleIds.has("intern")) {
-    orientationRoleLines.push(
-      "Happily, we also have an Intern. Every day they can, if they want, decide to spend time with a Mentor of their choosing. This means that if they are targeted by the Zombie Leaders that night, they won’t be terminated. However, if their mentor is terminated, the intern will be terminated along with them."
-    );
-  }
-  if (roleIds.has("office-gossip")) {
-    orientationRoleLines.push(
-      "We also have a very enthusiastic Office Gossip. They have the dirt on everybody and if they are targeted by the Zombie Leaders they will not necessarily go quietly — and can take someone down with them in retaliation if they so desire."
-    );
-  }
-  if (roleIds.has("social-club-organizer")) {
-    orientationRoleLines.push(
-      "In light of the increasing job demands that the Zombie Leaders are placing on us, we are also lucky to have a Social Club Organizer. In a round of their choosing they can set up a social club for themselves and up to three other people in HDC. Due to the well-evidenced socially curative effects of group memberships, this protects them all from being harmed by the Zombie Leaders in that round."
-    );
-  }
-
-  if (orientationRoleLines.length) {
-    orientation.push(...orientationRoleLines);
-  }
-  orientation.push(SCRIPT_TEXT.orientation[3]);
-  orientation.push(SCRIPT_TEXT.orientation[4]);
-
-  const intro = [
-    SCRIPT_TEXT.intro[0],
-    SCRIPT_PAUSE_2S_MARKER,
-    SCRIPT_TEXT.intro[1],
-    SCRIPT_PAUSE_2S_MARKER,
-    SCRIPT_TEXT.intro[2],
-    SCRIPT_PAUSE_MARKER,
-  ];
-  if (roleIds.has("sycophant")) {
-    intro.push(SCRIPT_TEXT.intro[3]);
-    intro.push(SCRIPT_PAUSE_2S_MARKER);
-    intro.push(SCRIPT_TEXT.intro[4]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("office-manager")) {
-    intro.push(SCRIPT_TEXT.intro[5]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("hr-lead")) {
-    intro.push(SCRIPT_TEXT.intro[6]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("it-specialist")) {
-    intro.push(SCRIPT_TEXT.intro[7]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("training-supervisor")) {
-    intro.push(SCRIPT_TEXT.intro[8]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("schosshundchen")) {
-    intro.push(SCRIPT_TEXT.intro[9]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("social-club-organizer")) {
-    intro.push(SCRIPT_TEXT.intro[10]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("office-gossip")) {
-    intro.push(SCRIPT_TEXT.intro[11]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("intern")) {
-    intro.push("Now could the Intern open your eyes and look at me please. Thank you and good luck. Please close your eyes.");
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("office-matchmaker")) {
-    intro.push(SCRIPT_TEXT.intro[12]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-    intro.push(SCRIPT_TEXT.intro[13]);
-    intro.push(SCRIPT_PAUSE_2S_MARKER);
-    intro.push(SCRIPT_TEXT.intro[14]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  if (roleIds.has("union-rep")) {
-    intro.push(SCRIPT_TEXT.intro[15]);
-    intro.push(SCRIPT_PAUSE_MARKER);
-  }
-  intro.push(SCRIPT_TEXT.intro[16]);
-  intro.push(SCRIPT_PAUSE_MARKER);
-  intro.push(SCRIPT_TEXT.intro[17]);
-  intro.push(SCRIPT_TEXT.intro[18]);
-  intro.push(SCRIPT_TEXT.intro[19]);
-
-  const day = [SCRIPT_TEXT.day[0]];
-  const hasDayRoleActions =
-    roleIds.has("office-manager") ||
-    roleIds.has("hr-lead") ||
-    roleIds.has("it-specialist");
-
-  if (hasDayRoleActions) {
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[1]);
-  }
-  if (roleIds.has("office-manager")) {
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[2]);
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[3]);
-  }
-  if (roleIds.has("hr-lead")) {
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[4]);
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[5]);
-  }
-  if (roleIds.has("it-specialist")) {
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[6]);
-    day.push(SCRIPT_PAUSE_MARKER);
-    day.push(SCRIPT_TEXT.day[7]);
-  }
-
-  const night = [SCRIPT_TEXT.night[0]];
-  if (roleIds.has("sycophant")) {
-    night.push(
-      "We have a Sycophant who is secretly working towards a Zombie Leader victory unbeknownst to both the Zombie Leaders and the Organizational Citizens. If the Zombie Leaders win, the Sycophant wins too."
-    );
-  }
-  if (roleIds.has("training-supervisor")) {
-    night.push(SCRIPT_TEXT.night[1]);
-    night.push(SCRIPT_PAUSE_MARKER);
-    night.push(SCRIPT_TEXT.night[2]);
-  }
-  if (roleIds.has("social-club-organizer")) {
-    night.push(SCRIPT_TEXT.night[3]);
-    night.push(SCRIPT_PAUSE_MARKER);
-    night.push(SCRIPT_TEXT.night[4]);
-  }
-  if (roleIds.has("office-gossip")) {
-    night.push(SCRIPT_TEXT.night[5]);
-    night.push(SCRIPT_PAUSE_MARKER);
-    night.push(SCRIPT_TEXT.night[6]);
-  }
-  if (roleIds.has("intern")) {
-    night.push(SCRIPT_TEXT.night[7]);
-    night.push(SCRIPT_PAUSE_MARKER);
-    night.push(SCRIPT_TEXT.night[8]);
-  }
-  night.push(SCRIPT_TEXT.night[9]);
-  night.push(SCRIPT_TEXT.night[10]);
-  night.push(SCRIPT_TEXT.night[11]);
-  night.push(SCRIPT_TEXT.night[12]);
-  night.push(SCRIPT_PAUSE_MARKER);
-  night.push(SCRIPT_TEXT.night[13]);
-  night.push(SCRIPT_TEXT.night[14]);
-
-  return { orientation, intro, day, night };
+  return Object.fromEntries(
+    SCRIPT_TYPES.map((type) => [type, planToScriptLines(buildScriptPlan(type, activeRoles))])
+  );
 }
 
 function buildFallbackScripts() {
@@ -1933,12 +1861,7 @@ function populateVoiceList() {
   if (!window.speechSynthesis) {
     state.voices = [];
     state.voiceMap = new Map();
-    if (!isVoiceOptionAvailable(selectedVoiceOption())) {
-      const firstAvailable = VOICE_OPTIONS.find((option) => isVoiceOptionAvailable(option));
-      if (firstAvailable) {
-        state.selectedVoiceId = firstAvailable.id;
-      }
-    }
+    ensureSelectedVoiceAvailable({ silent: true });
     renderVoiceChoices();
     renderTimerVoiceChoices();
     syncScriptPlaybackUI();
@@ -1961,10 +1884,7 @@ function populateVoiceList() {
     allVoices
   );
 
-  if (!isVoiceOptionAvailable(selectedVoiceOption())) {
-    const firstAvailable = VOICE_OPTIONS.find((option) => isVoiceOptionAvailable(option));
-    state.selectedVoiceId = firstAvailable ? firstAvailable.id : VOICE_OPTIONS[0].id;
-  }
+  ensureSelectedVoiceAvailable({ silent: true });
 
   renderVoiceChoices();
   renderTimerVoiceChoices();
@@ -2048,8 +1968,159 @@ function resolveUsableVoiceForOption(option) {
   return state.voiceMap.get(option.id) || null;
 }
 
+function isRecordedVoiceOption(option) {
+  return option?.kind === "recorded";
+}
+
 function canUseBrowserSpeechFallback() {
   return Boolean(window.speechSynthesis && typeof SpeechSynthesisUtterance === "function");
+}
+
+function canUseRecordedNarration() {
+  const probe = document.createElement("audio");
+  return RECORDED_AUDIO_MIME_TYPES.some((mimeType) => probe.canPlayType?.(mimeType));
+}
+
+function recordingSetId(optionOrId) {
+  if (typeof optionOrId === "string") return optionOrId;
+  return optionOrId?.recordingSet || "";
+}
+
+function getRecordedVoiceSupport(optionOrId) {
+  const recordingSet = recordingSetId(optionOrId);
+  if (!recordingSet) return RECORDED_VOICE_SUPPORT.UNKNOWN;
+  return state.recordedVoiceSupport.get(recordingSet) || RECORDED_VOICE_SUPPORT.UNKNOWN;
+}
+
+function setRecordedVoiceSupport(optionOrId, status) {
+  const recordingSet = recordingSetId(optionOrId);
+  if (!recordingSet) return;
+  state.recordedVoiceSupport.set(recordingSet, status);
+}
+
+function getRecordedVoiceProbeClip(option) {
+  const manifest = getRecordedVoiceManifest(option);
+  if (!manifest) return null;
+  if (manifest[RECORDED_VOICE_TEST_SEGMENT.id]?.src) {
+    return manifest[RECORDED_VOICE_TEST_SEGMENT.id];
+  }
+  return Object.values(manifest).find((clip) => clip?.src) || null;
+}
+
+function ensureSelectedVoiceAvailable(options = {}) {
+  const silent = Boolean(options.silent);
+  const current = selectedVoiceOption();
+  if (isVoiceOptionAvailable(current)) return;
+  const fallback = VOICE_OPTIONS.find((option) => isVoiceOptionAvailable(option)) || VOICE_OPTIONS[0];
+  if (!fallback || fallback.id === current?.id) return;
+  const previousName = current?.name || "Selected voice";
+  state.selectedVoiceId = fallback.id;
+  if (!silent) {
+    setAudioStatus(`${previousName} is unavailable in this browser. Switching to ${fallback.name}.`, true);
+  }
+}
+
+function finalizeRecordedVoiceProbe(option, status) {
+  setRecordedVoiceSupport(option, status);
+  const wasSelected = selectedVoiceOption()?.id === option?.id;
+  ensureSelectedVoiceAvailable({ silent: !wasSelected || status === RECORDED_VOICE_SUPPORT.SUPPORTED });
+  renderVoiceChoices();
+  syncScriptPlaybackUI();
+}
+
+function probeRecordedVoiceSupport(option) {
+  if (!isRecordedVoiceOption(option)) return;
+  if (!canUseRecordedNarration()) {
+    finalizeRecordedVoiceProbe(option, RECORDED_VOICE_SUPPORT.UNSUPPORTED);
+    return;
+  }
+
+  const currentStatus = getRecordedVoiceSupport(option);
+  if (
+    currentStatus === RECORDED_VOICE_SUPPORT.CHECKING ||
+    currentStatus === RECORDED_VOICE_SUPPORT.SUPPORTED ||
+    currentStatus === RECORDED_VOICE_SUPPORT.UNSUPPORTED
+  ) {
+    return;
+  }
+
+  const clip = getRecordedVoiceProbeClip(option);
+  if (!clip?.src) {
+    finalizeRecordedVoiceProbe(option, RECORDED_VOICE_SUPPORT.UNSUPPORTED);
+    return;
+  }
+
+  setRecordedVoiceSupport(option, RECORDED_VOICE_SUPPORT.CHECKING);
+  renderVoiceChoices();
+
+  const audio = new Audio();
+  let settled = false;
+  let timeoutId = 0;
+  const cleanup = () => {
+    window.clearTimeout(timeoutId);
+    audio.removeEventListener("canplay", handleCanPlay);
+    audio.removeEventListener("error", handleError);
+    audio.removeAttribute("src");
+    try {
+      audio.load();
+    } catch (_) {}
+  };
+  const finish = (status) => {
+    if (settled) return;
+    settled = true;
+    cleanup();
+    finalizeRecordedVoiceProbe(option, status);
+  };
+  const handleCanPlay = () => finish(RECORDED_VOICE_SUPPORT.SUPPORTED);
+  const handleError = () => finish(RECORDED_VOICE_SUPPORT.UNSUPPORTED);
+
+  audio.preload = "auto";
+  audio.addEventListener("canplay", handleCanPlay, { once: true });
+  audio.addEventListener("error", handleError, { once: true });
+  timeoutId = window.setTimeout(() => finish(RECORDED_VOICE_SUPPORT.UNSUPPORTED), 8000);
+  audio.src = clip.src;
+  audio.load();
+}
+
+function primeRecordedVoiceSupport() {
+  VOICE_OPTIONS.filter((option) => option.kind === "recorded").forEach((option) => {
+    probeRecordedVoiceSupport(option);
+  });
+}
+
+function getRecordedVoiceManifest(optionOrId) {
+  const recordingSet =
+    typeof optionOrId === "string" ? optionOrId : optionOrId?.recordingSet;
+  if (!recordingSet) return null;
+  return RECORDED_VOICE_MANIFEST[recordingSet] || null;
+}
+
+function resolveRecordedClip(option, clipId, text = "") {
+  const manifest = getRecordedVoiceManifest(option);
+  const clip = manifest?.[clipId];
+  if (!clip?.src) return null;
+  return {
+    id: clipId,
+    text,
+    src: clip.src,
+    durationMs: clip.durationMs,
+  };
+}
+
+function buildRecordedSegmentsForPanel(type, voiceOption = selectedVoiceOption()) {
+  if (!isRecordedVoiceOption(voiceOption)) return [];
+  const plan = buildScriptPlan(type, state.activeRoles);
+  return plan
+    .map((entry) => {
+      if (!entry?.text) return null;
+      if (entry.text === SCRIPT_PAUSE_MARKER || entry.text === SCRIPT_PAUSE_2S_MARKER) {
+        return { ...entry };
+      }
+      const clip = resolveRecordedClip(voiceOption, entry.id, entry.text);
+      if (!clip) return null;
+      return clip;
+    })
+    .filter(Boolean);
 }
 
 function sortVoicesByQuality(voices) {
@@ -2129,6 +2200,11 @@ function renderVoiceChoiceGroup(container) {
 
 function isVoiceOptionAvailable(option) {
   if (!option) return false;
+  if (isRecordedVoiceOption(option)) {
+    const manifest = getRecordedVoiceManifest(option);
+    if (!manifest || !Object.keys(manifest).length || !canUseRecordedNarration()) return false;
+    return getRecordedVoiceSupport(option) !== RECORDED_VOICE_SUPPORT.UNSUPPORTED;
+  }
   if (resolveUsableVoiceForOption(option)) return true;
   return !state.voices.length && canUseBrowserSpeechFallback();
 }
@@ -2139,6 +2215,17 @@ function isSelectedVoiceAvailable() {
 
 function getVoiceOptionMeta(option) {
   if (!option) return "";
+  if (isRecordedVoiceOption(option)) {
+    if (!canUseRecordedNarration()) return "Recording unavailable in this browser";
+    const support = getRecordedVoiceSupport(option);
+    if (support === RECORDED_VOICE_SUPPORT.CHECKING || support === RECORDED_VOICE_SUPPORT.UNKNOWN) {
+      return "Checking recording...";
+    }
+    if (support === RECORDED_VOICE_SUPPORT.UNSUPPORTED) {
+      return "Unsupported in this browser";
+    }
+    return "Bundled recording";
+  }
   const voice = resolveUsableVoiceForOption(option);
   if (!voice) {
     if (!canUseBrowserSpeechFallback()) return "Unavailable on this device";
@@ -2152,6 +2239,19 @@ function getVoiceOptionMeta(option) {
 
 function getVoiceUnavailableReason(option) {
   if (!option) return "Select a voice first.";
+  if (isRecordedVoiceOption(option)) {
+    if (!canUseRecordedNarration()) {
+      return "This browser cannot play the bundled narration recordings.";
+    }
+    const support = getRecordedVoiceSupport(option);
+    if (support === RECORDED_VOICE_SUPPORT.CHECKING || support === RECORDED_VOICE_SUPPORT.UNKNOWN) {
+      return "This recording is still being checked.";
+    }
+    if (support === RECORDED_VOICE_SUPPORT.UNSUPPORTED) {
+      return "This browser cannot decode this recording bundle.";
+    }
+    return "The bundled narration clips for this voice are incomplete.";
+  }
   if (!canUseBrowserSpeechFallback()) return getSpeechUnsupportedMessage();
   if (state.voices.length) {
     return "This device does not offer a distinct compatible voice for this button.";
@@ -2172,24 +2272,33 @@ function renderVoiceDiagnostics() {
 }
 
 function buildVoiceDiagnosticMarkup() {
-  if (!canUseBrowserSpeechFallback()) {
+  const hasRecordedSupport = canUseRecordedNarration();
+  const hasLocalSupport = canUseBrowserSpeechFallback();
+  if (!hasRecordedSupport && !hasLocalSupport) {
     return `
       <p class="voice-diagnostic-title">Voice Check</p>
-      <p class="voice-diagnostic-warning">${escapeHtml(getSpeechUnsupportedMessage())}</p>
+      <p class="voice-diagnostic-warning">This browser cannot play the bundled narration recordings or device speech voices.</p>
     `;
   }
 
-  const note = !state.voices.length
-    ? "Your browser can still speak, but the device voice list has not loaded yet. Voice buttons will finish mapping as soon as the device voices become available."
-    : "These are the actual browser voices currently mapped to the three voice buttons.";
+  const note = !hasLocalSupport
+    ? "Alex and Zoe use bundled recordings. Daniel, Samantha, and Moira depend on device speech voices, which are unavailable in this browser."
+    : !state.voices.length
+    ? "Alex and Zoe use bundled recordings. Daniel, Samantha, and Moira will finish mapping as soon as the device speech voices become available."
+    : "Alex and Zoe use bundled recordings. Daniel, Samantha, and Moira use the actual device speech voices mapped below.";
 
   const items = VOICE_OPTIONS.map((option) => {
-    const voice = resolveUsableVoiceForOption(option);
-    const label = voice
-      ? `${voice.name || "Browser default"}${voice.lang ? ` (${voice.lang})` : ""}`
-      : state.voices.length
-      ? "Unavailable on this device"
-      : "Loading device voice...";
+    let label = "";
+    if (isRecordedVoiceOption(option)) {
+      label = getVoiceOptionMeta(option);
+    } else {
+      const voice = resolveUsableVoiceForOption(option);
+      label = voice
+        ? `${voice.name || "Browser default"}${voice.lang ? ` (${voice.lang})` : ""}`
+        : state.voices.length
+        ? "Unavailable on this device"
+        : "Loading device voice...";
+    }
     return `
       <li>
         <span class="voice-diagnostic-label">${escapeHtml(option.name)}</span>
@@ -2250,6 +2359,21 @@ function handleVoiceVolumeInput(event) {
 }
 
 function handleTestVoice() {
+  const selectedOption = selectedVoiceOption();
+  if (isRecordedVoiceOption(selectedOption)) {
+    const clip = resolveRecordedClip(
+      selectedOption,
+      RECORDED_VOICE_TEST_SEGMENT.id,
+      getScriptSegmentText(RECORDED_VOICE_TEST_SEGMENT.panel, RECORDED_VOICE_TEST_SEGMENT.id)
+    );
+    if (!clip) {
+      setAudioStatus(`${selectedOption.name} does not have a test recording available.`, true);
+      return;
+    }
+    playRecordedSegments([clip], { label: "Voice test" }, selectedOption);
+    return;
+  }
+
   const sample = [
     "Voice test for Zombie Leaders.",
     "This is the current voice and speed setting.",
@@ -2342,6 +2466,13 @@ function splitTextAtBoundaryPunctuation(text, boundaries = []) {
   return parts;
 }
 
+function buildPlaybackSegmentsForType(type, fullLines, voiceOption = selectedVoiceOption()) {
+  if (isRecordedVoiceOption(voiceOption)) {
+    return buildRecordedSegmentsForPanel(type, voiceOption);
+  }
+  return buildSpeechSegments(fullLines);
+}
+
 function playScript(type) {
   if (state.scriptPendingResume?.type === type) {
     resumeScriptFromPending(type);
@@ -2359,17 +2490,64 @@ function playScript(type) {
     return;
   }
 
-  const fullSegments = buildSpeechSegments(lines);
+  const voiceOption = selectedVoiceOption();
+  const fullSegments = buildPlaybackSegmentsForType(type, lines, voiceOption);
+  if (!fullSegments.length) {
+    setAudioStatus(`No narration assets are available for ${SCRIPT_LABELS[type] || "this item"}.`, true);
+    return;
+  }
+
   speakLines(lines, {
     label: SCRIPT_LABELS[type] || "Script",
     scriptType: type,
     fullLines: lines,
     fullSegments,
     startSegmentIndex: 0,
-  });
+    voiceId: voiceOption.id,
+  }, voiceOption);
 }
 
-function speakLines(lines, options = {}) {
+function speakLines(lines, options = {}, overrideVoiceOption = null) {
+  const voiceOption = overrideVoiceOption || selectedVoiceOption();
+  if (!isVoiceOptionAvailable(voiceOption)) {
+    const mappedFallbackOption = VOICE_OPTIONS.find(
+      (option) => option.id !== voiceOption.id && isVoiceOptionAvailable(option)
+    );
+    if (mappedFallbackOption) {
+      state.selectedVoiceId = mappedFallbackOption.id;
+      renderVoiceChoices();
+      syncScriptPlaybackUI();
+      setAudioStatus(
+        `${voiceOption.name} is unavailable. Switching to ${mappedFallbackOption.name}.`,
+        true
+      );
+      speakLines(lines, { ...options, voiceId: mappedFallbackOption.id }, mappedFallbackOption);
+      return;
+    }
+
+    setAudioStatus(`${voiceOption.name} is not ready yet. ${getVoiceUnavailableReason(voiceOption)}`, true);
+    return;
+  }
+
+  if (isRecordedVoiceOption(voiceOption)) {
+    const fullSegments =
+      options.fullSegments?.length ? options.fullSegments : buildRecordedSegmentsForPanel(options.scriptType, voiceOption);
+    if (!fullSegments?.length) {
+      setAudioStatus(`No bundled recordings are available for ${voiceOption.name}.`, true);
+      return;
+    }
+    playRecordedSegments(
+      fullSegments,
+      {
+        ...options,
+        fullLines: options.fullLines || lines,
+        fullSegments,
+      },
+      voiceOption
+    );
+    return;
+  }
+
   if (!canUseBrowserSpeechFallback()) {
     setAudioStatus(getSpeechUnsupportedMessage(), true);
     return;
@@ -2379,31 +2557,143 @@ function speakLines(lines, options = {}) {
     populateVoiceList();
   }
 
-  const voiceOption = selectedVoiceOption();
-  if (!isVoiceOptionAvailable(voiceOption)) {
-    const mappedFallbackOption = VOICE_OPTIONS.find((option) => resolveUsableVoiceForOption(option));
-    if (mappedFallbackOption) {
-      state.selectedVoiceId = mappedFallbackOption.id;
-      renderVoiceChoices();
-      syncScriptPlaybackUI();
-      setAudioStatus(
-        `${voiceOption.name} is unavailable on this device. Switching to ${mappedFallbackOption.name}.`,
-        true
-      );
-      speakLinesWithLocalVoice(lines, options, mappedFallbackOption);
-      return;
-    }
+  speakLinesWithLocalVoice(lines, options, voiceOption);
+}
 
-    if (!state.voices.length) {
-      speakLinesWithLocalVoice(lines, options, voiceOption);
-      return;
-    }
+function playRecordedSegments(segments, options = {}, voiceOption = selectedVoiceOption()) {
+  stopSpeech();
+  const {
+    label = "Voice",
+    scriptType = null,
+    fullLines = planToScriptLines(segments),
+    fullSegments = segments,
+    startSegmentIndex = 0,
+    startSegmentOffsetMs = 0,
+  } = options;
+  const sessionId = state.speechSessionId;
+  const rate = Number(dom.voiceRate.value);
+  const segmentsToPlay = fullSegments.slice(startSegmentIndex);
+  let currentSegment = 0;
+  let currentOffsetMs = Math.max(0, Number(startSegmentOffsetMs) || 0);
+  const isCurrentSession = () => state.speechSessionId === sessionId;
 
-    setAudioStatus(`${voiceOption.name} is not ready yet. ${getVoiceUnavailableReason(voiceOption)}`, true);
-    return;
+  if (scriptType) {
+    startScriptPlayback(scriptType, fullLines, fullSegments, rate, sessionId, {
+      mode: "recorded",
+      voiceId: voiceOption.id,
+    });
   }
 
-  speakLinesWithLocalVoice(lines, options, voiceOption);
+  const playNext = () => {
+    if (!isCurrentSession()) return;
+
+    if (currentSegment >= segmentsToPlay.length) {
+      finishScriptPlayback(sessionId, true);
+      setAudioStatus(`${label} complete.`);
+      return;
+    }
+
+    const fullSegmentIndex = startSegmentIndex + currentSegment;
+    const currentSegmentData = segmentsToPlay[currentSegment];
+    const currentText = currentSegmentData.text;
+    if (currentText === SCRIPT_PAUSE_MARKER) {
+      pauseScriptAtCue(sessionId, fullLines, fullSegments, fullSegmentIndex + 1);
+      setAudioStatus(`${label} paused at cue. Press Resume to continue.`);
+      return;
+    }
+    if (currentText === SCRIPT_PAUSE_2S_MARKER) {
+      markScriptPlaybackLineStart(sessionId, fullSegmentIndex, currentOffsetMs);
+      setAudioStatus(`${label}: pausing for 2 seconds.`);
+      window.setTimeout(() => {
+        if (!isCurrentSession()) return;
+        markScriptPlaybackLineEnd(sessionId, fullSegmentIndex);
+        currentSegment += 1;
+        currentOffsetMs = 0;
+        playNext();
+      }, 2000);
+      return;
+    }
+
+    const audio = new Audio(currentSegmentData.src);
+    audio.preload = "auto";
+    audio.playbackRate = rate;
+    audio.volume = clamp(state.narrationVolumeRatio, 0, 1);
+
+    const playback = getScriptPlayback(sessionId);
+    if (playback) {
+      playback.audioElement = audio;
+    }
+
+    let started = false;
+    const handleFailure = (reason = "unknown") => {
+      if (!isCurrentSession()) return;
+      finalizeRecordedVoiceProbe(voiceOption, RECORDED_VOICE_SUPPORT.UNSUPPORTED);
+      finishScriptPlayback(sessionId, false);
+      const fallback = selectedVoiceOption();
+      if (fallback?.id !== voiceOption.id) {
+        setAudioStatus(`${voiceOption.name} is unavailable in this browser. Switching to ${fallback.name}.`, true);
+        return;
+      }
+      setAudioStatus(`Recording playback failed (${reason}).`, true);
+    };
+
+    const handleEnded = () => {
+      if (!isCurrentSession()) return;
+      const playbackState = getScriptPlayback(sessionId);
+      if (playbackState?.audioElement === audio) {
+        playbackState.audioElement = null;
+      }
+      markScriptPlaybackLineEnd(sessionId, fullSegmentIndex);
+      currentSegment += 1;
+      currentOffsetMs = 0;
+      playNext();
+    };
+
+    audio.addEventListener("ended", handleEnded, { once: true });
+    audio.addEventListener(
+      "error",
+      () => {
+        if (!isCurrentSession()) return;
+        handleFailure("audio-error");
+      },
+      { once: true }
+    );
+    audio.addEventListener(
+      "playing",
+      () => {
+        if (!isCurrentSession() || started) return;
+        started = true;
+        markScriptPlaybackLineStart(sessionId, fullSegmentIndex, currentOffsetMs);
+        setAudioStatus(`${label} currently playing.`);
+      },
+      { once: true }
+    );
+
+    const startAudio = () => {
+      if (!isCurrentSession()) return;
+      const mediaOffsetSec = clamp((currentOffsetMs * rate) / 1000, 0, (currentSegmentData.durationMs || 0) / 1000);
+      if (mediaOffsetSec > 0) {
+        try {
+          audio.currentTime = mediaOffsetSec;
+        } catch (_) {}
+      }
+      const playResult = audio.play();
+      if (playResult && typeof playResult.catch === "function") {
+        playResult.catch((error) => {
+          handleFailure(String(error?.name || error?.message || "playback-blocked").toLowerCase());
+        });
+      }
+    };
+
+    if (audio.readyState >= 1) {
+      startAudio();
+    } else {
+      audio.addEventListener("loadedmetadata", startAudio, { once: true });
+      audio.load();
+    }
+  };
+
+  playNext();
 }
 
 function speakLinesWithLocalVoice(lines, options = {}, voiceOption) {
@@ -2527,6 +2817,14 @@ function speakLinesWithLocalVoice(lines, options = {}, voiceOption) {
 }
 
 function stopSpeech() {
+  const activeAudio = state.scriptPlayback?.audioElement || null;
+  if (activeAudio) {
+    try {
+      activeAudio.pause();
+      activeAudio.removeAttribute("src");
+      activeAudio.load();
+    } catch (_) {}
+  }
   clearScriptPlayback(false);
   state.speechSessionId += 1;
   if (window.speechSynthesis?.speaking || window.speechSynthesis?.pending) {
@@ -2537,6 +2835,30 @@ function stopSpeech() {
 function toggleScriptPause(type) {
   if (state.scriptPendingResume?.type === type) return;
   if (state.scriptPlayback?.type !== type) return;
+  if (state.scriptPlayback?.mode === "recorded") {
+    const audio = state.scriptPlayback.audioElement;
+    if (!audio) return;
+    if (state.scriptPlayback.isPaused || audio.paused) {
+      resumeScriptPlayback(state.scriptPlayback.sessionId);
+      const playResult = audio.play();
+      if (playResult && typeof playResult.catch === "function") {
+        playResult.catch(() => {
+          pauseScriptPlayback(state.scriptPlayback.sessionId);
+          setAudioStatus(`${SCRIPT_LABELS[type] || "Script"} could not resume.`, true);
+        });
+      }
+      setAudioStatus(`${SCRIPT_LABELS[type] || "Script"} resumed.`);
+      return;
+    }
+
+    pauseScriptPlayback(state.scriptPlayback.sessionId);
+    try {
+      audio.pause();
+    } catch (_) {}
+    setAudioStatus(`${SCRIPT_LABELS[type] || "Script"} paused.`);
+    return;
+  }
+
   if (!window.speechSynthesis) return;
 
   if (window.speechSynthesis.paused) {
@@ -2560,7 +2882,7 @@ function setScriptPlaybackControlsDisabled(disabled) {
   });
 }
 
-function startScriptPlayback(type, lines, fullSegments, rate, sessionId) {
+function startScriptPlayback(type, lines, fullSegments, rate, sessionId, options = {}) {
   clearScriptPlayback(false);
   state.completedScriptPlayback = null;
   const timeline = buildScriptTimeline(fullSegments, rate);
@@ -2581,6 +2903,9 @@ function startScriptPlayback(type, lines, fullSegments, rate, sessionId) {
     isPaused: false,
     timerId: 0,
     lastElapsedMs: 0,
+    mode: options.mode || "speech",
+    voiceId: options.voiceId || null,
+    audioElement: null,
   };
 
   state.scriptPlayback.timerId = window.setInterval(syncScriptPlaybackUI, 160);
@@ -2595,15 +2920,20 @@ function pauseScriptAtCue(sessionId, fullLines, fullSegments, nextLineIndex) {
   setScriptResumePoint(playback.type, fullLines, fullSegments, playback.rate, clampedNext, elapsedMs, {
     reason: "cue",
     sessionId: playback.sessionId,
+    mode: playback.mode,
+    voiceId: playback.voiceId,
+    lineElapsedMs: 0,
   });
 }
 
 function resumeScriptFromPending(type) {
   const pending = state.scriptPendingResume;
   if (!pending || pending.type !== type) return;
-  const remainingLines = pending.fullSegments.slice(pending.nextLineIndex);
+  const voiceOption =
+    VOICE_OPTIONS.find((entry) => entry.id === pending.voiceId) || selectedVoiceOption();
+  const remainingLines = pending.fullLines;
   state.scriptPendingResume = null;
-  if (!remainingLines.length) {
+  if (!pending.fullSegments.slice(pending.nextLineIndex).length) {
     state.completedScriptPlayback = {
       type,
       totalMs: pending.elapsedMs,
@@ -2619,31 +2949,23 @@ function resumeScriptFromPending(type) {
     fullLines: pending.fullLines,
     fullSegments: pending.fullSegments,
     startSegmentIndex: pending.nextLineIndex,
-  });
+    startSegmentOffsetMs: pending.lineElapsedMs || 0,
+    voiceId: voiceOption.id,
+  }, voiceOption);
 }
 
 function beginScriptScrub(type, event) {
   const panelDom = dom.scriptPanels[type];
   const fullLines = getPanelLines(type);
-  if (!panelDom?.progressInput || !fullLines?.length || !window.speechSynthesis) return;
+  if (!panelDom?.progressInput || !fullLines?.length) return;
   if (type === "orientation" && !dom.orientationEnabled.checked) return;
   const initialValue = Number(panelDom.progressInput.value || 0);
-
-  const hasQueuedSpeech = Boolean(
-    window.speechSynthesis?.speaking ||
-    window.speechSynthesis?.pending ||
-    window.speechSynthesis?.paused
-  );
   const currentlyActive = state.scriptPlayback?.type === type;
   const currentlyAwaitingRestart = state.scriptPendingResume?.type === type;
   const shouldResumeOnRelease =
-    currentlyActive && !currentlyAwaitingRestart && !state.scriptPlayback?.isPaused &&
-    Boolean(
-      window.speechSynthesis?.speaking ||
-      window.speechSynthesis?.pending
-    );
+    currentlyActive && !currentlyAwaitingRestart && !state.scriptPlayback?.isPaused;
 
-  if (hasQueuedSpeech) {
+  if (currentlyActive || currentlyAwaitingRestart) {
     stopSpeech();
   }
 
@@ -2664,18 +2986,26 @@ function updateScriptScrub(type, event) {
   const max = Number(event.currentTarget?.max ?? panelDom.progressInput.max ?? 1000);
   const ratio = max > 0 ? clamp(value / max, 0, 1) : 0;
   const rate = Number(dom.voiceRate.value);
-  const fullSegments = buildSpeechSegments(fullLines);
+  const pending = state.scriptPendingResume?.type === type ? state.scriptPendingResume : null;
+  const active = state.scriptPlayback?.type === type ? state.scriptPlayback : null;
+  const voiceOption =
+    VOICE_OPTIONS.find((entry) => entry.id === (active?.voiceId || pending?.voiceId || state.selectedVoiceId)) ||
+    selectedVoiceOption();
+  const fullSegments = active?.fullSegments || pending?.fullSegments || buildPlaybackSegmentsForType(type, fullLines, voiceOption);
   const timeline = buildScriptTimeline(fullSegments, rate);
   const elapsedMs = Math.round(timeline.totalMs * ratio);
-  const nextLineIndex = findSeekLineIndex(
+  const seekTarget = findSeekTarget(
     fullSegments,
     timeline.lineOffsets,
     timeline.lineDurations,
-    elapsedMs
+    elapsedMs,
+    isRecordedVoiceOption(voiceOption)
   );
-  const snappedElapsed = timeline.lineOffsets[nextLineIndex] || timeline.totalMs || 0;
-  setScriptResumePoint(type, fullLines, fullSegments, rate, nextLineIndex, snappedElapsed, {
+  setScriptResumePoint(type, fullLines, fullSegments, rate, seekTarget.index, seekTarget.elapsedMs, {
     reason: "seek",
+    mode: isRecordedVoiceOption(voiceOption) ? "recorded" : "speech",
+    voiceId: voiceOption.id,
+    lineElapsedMs: seekTarget.lineElapsedMs,
   });
 }
 
@@ -2713,6 +3043,9 @@ function setScriptResumePoint(type, fullLines, fullSegments, rate, nextLineIndex
     isPaused: true,
     timerId: 0,
     lastElapsedMs: safeElapsed,
+    mode: options.mode || "speech",
+    voiceId: options.voiceId || null,
+    audioElement: null,
   };
   state.scriptPendingResume = {
     type,
@@ -2722,18 +3055,21 @@ function setScriptResumePoint(type, fullLines, fullSegments, rate, nextLineIndex
     nextLineIndex: safeIndex,
     elapsedMs: safeElapsed,
     reason: options.reason || "seek",
+    mode: options.mode || "speech",
+    voiceId: options.voiceId || null,
+    lineElapsedMs: clamp(Number(options.lineElapsedMs) || 0, 0, timeline.lineDurations[safeIndex] || 0),
   };
   syncScriptPlaybackUI();
 }
 
-function markScriptPlaybackLineStart(sessionId, lineIndex) {
+function markScriptPlaybackLineStart(sessionId, lineIndex, lineElapsedMs = 0) {
   const playback = getScriptPlayback(sessionId);
   if (!playback) return;
   playback.currentLine = lineIndex;
-  playback.lineStartedAt = performance.now();
+  playback.lineStartedAt = performance.now() - Math.max(0, Number(lineElapsedMs) || 0);
   playback.pausedAt = 0;
   playback.isPaused = false;
-  playback.lastElapsedMs = playback.lineOffsets[lineIndex] || 0;
+  playback.lastElapsedMs = (playback.lineOffsets[lineIndex] || 0) + Math.max(0, Number(lineElapsedMs) || 0);
   syncScriptPlaybackUI();
 }
 
@@ -2769,6 +3105,14 @@ function resumeScriptPlayback(sessionId) {
 function finishScriptPlayback(sessionId, completed = false) {
   const playback = getScriptPlayback(sessionId);
   if (!playback) return;
+  if (playback.audioElement) {
+    try {
+      playback.audioElement.pause();
+      playback.audioElement.removeAttribute("src");
+      playback.audioElement.load();
+    } catch (_) {}
+    playback.audioElement = null;
+  }
   if (playback.timerId) {
     window.clearInterval(playback.timerId);
     playback.timerId = 0;
@@ -2896,6 +3240,9 @@ function syncScriptPlaybackUI() {
 }
 
 function estimateSpeechDurationMs(input, rate) {
+  if (typeof input?.durationMs === "number") {
+    return Math.max(0, input.durationMs / clamp(Number(rate) || 1, 0.6, 1.8));
+  }
   const text = typeof input === "string" ? input : input?.text;
   if (text === SCRIPT_PAUSE_MARKER) return 0;
   if (text === SCRIPT_PAUSE_2S_MARKER) return 2000;
@@ -2970,6 +3317,38 @@ function findSeekLineIndex(lines, lineOffsets, lineDurations, targetMs) {
     }
   }
   return findNextSpokenLineIndex(lines, lines.length);
+}
+
+function findSeekTarget(lines, lineOffsets, lineDurations, targetMs, exactWithinLine = false) {
+  const safeTarget = Math.max(0, Number(targetMs) || 0);
+  if (!exactWithinLine) {
+    const index = findSeekLineIndex(lines, lineOffsets, lineDurations, safeTarget);
+    const elapsedMs = lineOffsets[index] || 0;
+    return { index, elapsedMs, lineElapsedMs: 0 };
+  }
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (!line || line.text === SCRIPT_PAUSE_MARKER || line.text === SCRIPT_PAUSE_2S_MARKER) {
+      continue;
+    }
+    const start = lineOffsets[index] || 0;
+    const duration = lineDurations[index] || 0;
+    const end = start + duration;
+    if (safeTarget <= end || index === lines.length - 1) {
+      return {
+        index,
+        elapsedMs: clamp(safeTarget, start, end),
+        lineElapsedMs: clamp(safeTarget - start, 0, duration),
+      };
+    }
+  }
+
+  return {
+    index: lines.length,
+    elapsedMs: lineOffsets[lines.length] || safeTarget,
+    lineElapsedMs: 0,
+  };
 }
 
 function findNextSpokenLineIndex(lines, startIndex = 0) {
