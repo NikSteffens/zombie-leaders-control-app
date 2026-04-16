@@ -309,15 +309,15 @@ h3 {
   flex: 1 1 100%;
 }
 
+.player-names-field textarea {
+  min-height: 4.1rem;
+}
+
 .zombie-count-field {
   flex-basis: 280px;
 }
 
 #setup-panel .row + .player-names-field {
-  margin-top: 0.8rem;
-}
-
-#setup-panel .player-names-field + .row {
   margin-top: 0.8rem;
 }
 
@@ -1687,6 +1687,7 @@ button.danger {
   font-family: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
   font-size: 0.93rem;
   line-height: 1.52;
+  min-height: 3.6rem;
   background:
     linear-gradient(180deg, rgba(255, 250, 235, 0.09), rgba(70, 34, 22, 0.05)),
     rgba(255, 250, 235, 0.05);

@@ -37,25 +37,25 @@
         <p class="panel-kicker">Headcount Intake</p>
         <h2>1) Player Setup</h2>
       </div>
-      <p class="hint panel-intro">Set number of players first, then optionally add names.</p>
+      <p class="hint panel-intro">Set number of players first, then the number of Zombie Leaders to include in the game, then optionally add names.</p>
       <div class="row">
         <div class="field compact">
           <label for="player-count">Number of Players</label>
           <input id="player-count" type="number" min="1" max="24" value="12">
         </div>
       </div>
-      <div class="field compact player-names-field">
-        <label for="player-names">Player Names (Optional)</label>
-        <p class="field-help">If you would like the app to randomly assign roles to players, add player names here. If you want players to physically draw their own role card, leave this blank (you can enter player names later to match the role they drew). If any player name contains spaces, separate players with commas or line breaks, or put full names in quotation marks.</p>
-        <textarea id="player-names" rows="8" placeholder="Alex Beth Cath (leave blank to auto-create Player 1..N)"></textarea>
-      </div>
       <div class="row">
         <div class="field compact zombie-count-field">
           <label for="zombie-count" class="nowrap-label">Zombie Leaders (between 1 and 4)</label>
-          <p class="field-help">Each active icon below results in one hidden Zombie Leader in the organization.</p>
+          <p class="field-help">Set number of Zombie Leaders. Each active icon below results in one hidden Zombie Leader in the organization.</p>
           <input id="zombie-count" type="number" min="1" max="4" value="3">
           <div id="zombie-count-icons" class="zombie-count-icons" role="group" aria-label="Zombie Leader count icons"></div>
         </div>
+      </div>
+      <div class="field compact player-names-field">
+        <label for="player-names">Player Names (Optional)</label>
+        <p class="field-help">If you would like the app to randomly assign roles to players, add player names here. If you want players to physically draw their own role card, leave this blank (you can enter player names later to match the role they drew). If any player name contains spaces, separate players with commas or line breaks, or put full names in quotation marks.</p>
+        <textarea id="player-names" rows="2" placeholder="Alex Beth Cath (leave blank to auto-create Player 1..N)"></textarea>
       </div>
     </section>
 
@@ -400,7 +400,7 @@
               aria-label="Takeaway 1 progress"
             >
             <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-            <textarea id="lesson1-script" rows="4" readonly></textarea>
+            <textarea id="lesson1-script" rows="2" readonly></textarea>
           </div>
           <div class="script-box lesson-card" data-script-panel="lesson2" data-lesson-number="2">
             <div class="script-box-head lesson-card-head">
@@ -423,7 +423,7 @@
               aria-label="Takeaway 2 progress"
             >
             <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-            <textarea id="lesson2-script" rows="4" readonly></textarea>
+            <textarea id="lesson2-script" rows="2" readonly></textarea>
           </div>
           <div class="script-box lesson-card" data-script-panel="lesson3" data-lesson-number="3">
             <div class="script-box-head lesson-card-head">
@@ -446,7 +446,7 @@
               aria-label="Takeaway 3 progress"
             >
             <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-            <textarea id="lesson3-script" rows="4" readonly></textarea>
+            <textarea id="lesson3-script" rows="2" readonly></textarea>
           </div>
           <div class="script-box lesson-card" data-script-panel="lesson4" data-lesson-number="4">
             <div class="script-box-head lesson-card-head">
@@ -469,7 +469,7 @@
               aria-label="Takeaway 4 progress"
             >
             <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-            <textarea id="lesson4-script" rows="4" readonly></textarea>
+            <textarea id="lesson4-script" rows="2" readonly></textarea>
           </div>
           <div class="script-box lesson-card" data-script-panel="lesson5" data-lesson-number="5">
             <div class="script-box-head lesson-card-head">
@@ -492,7 +492,7 @@
               aria-label="Takeaway 5 progress"
             >
             <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-            <textarea id="lesson5-script" rows="4" readonly></textarea>
+            <textarea id="lesson5-script" rows="2" readonly></textarea>
           </div>
           <div class="script-box lesson-card" data-script-panel="lesson6" data-lesson-number="6">
             <div class="script-box-head lesson-card-head">
@@ -515,7 +515,7 @@
               aria-label="Takeaway 6 progress"
             >
             <p class="script-progress-meta" data-script-progress-meta>Ready to play.</p>
-            <textarea id="lesson6-script" rows="4" readonly></textarea>
+            <textarea id="lesson6-script" rows="2" readonly></textarea>
           </div>
         </div>
       </div>
