@@ -58,7 +58,7 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "recorded",
     recordingSet: "alex",
     sourceLabel: "Bundled recording",
-    image: "01_thumbnail icons/Departmental Administrator M30.png",
+    image: "../01_thumbnail icons/Departmental Administrator_Alex.jpeg",
   },
   {
     id: "zoe-recorded",
@@ -66,7 +66,7 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "recorded",
     recordingSet: "zoe",
     sourceLabel: "Bundled recording",
-    image: "01_thumbnail icons/Departmental Administrator F30.png",
+    image: "../01_thumbnail icons/Departmental Administrator_Zoe.jpeg",
   },
   {
     id: "daniel",
