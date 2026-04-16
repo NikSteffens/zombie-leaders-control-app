@@ -58,6 +58,7 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "recorded",
     recordingSet: "alex",
     sourceLabel: "Bundled recording",
+    uiMeta: "en-GB",
     image: "../01_thumbnail icons/Departmental Administrator_Alex.jpeg",
   },
   {
@@ -66,6 +67,7 @@ const VOICE_OPTIONS = Object.freeze([
     kind: "recorded",
     recordingSet: "zoe",
     sourceLabel: "Bundled recording",
+    uiMeta: "en-AU",
     image: "../01_thumbnail icons/Departmental Administrator_Zoe.jpeg",
   },
   {
@@ -73,6 +75,7 @@ const VOICE_OPTIONS = Object.freeze([
     name: "Daniel",
     kind: "local",
     sourceLabel: "Device voice",
+    uiMeta: "en-GB",
     matcher: /\bdaniel\b/i,
     fallbackMatchers: [
       /\bgoogle uk english male\b/i,
@@ -92,6 +95,7 @@ const VOICE_OPTIONS = Object.freeze([
     name: "Samantha",
     kind: "local",
     sourceLabel: "Device voice",
+    uiMeta: "en-US",
     matcher: /\bsamantha\b/i,
     fallbackMatchers: [
       /\bgoogle us english\b/i,
@@ -112,6 +116,7 @@ const VOICE_OPTIONS = Object.freeze([
     name: "Moira",
     kind: "local",
     sourceLabel: "Device voice",
+    uiMeta: "en-IE",
     matcher: /\bmoira\b/i,
     fallbackMatchers: [
       /\bgoogle uk english female\b/i,
@@ -2445,25 +2450,18 @@ function isSelectedVoiceAvailable() {
 function getVoiceOptionMeta(option) {
   if (!option) return "";
   if (isRecordedVoiceOption(option)) {
-    if (!canUseRecordedNarration()) return "Recording unavailable in this browser";
+    if (!canUseRecordedNarration()) return "Not available here";
     const support = getRecordedVoiceSupport(option);
-    if (support === RECORDED_VOICE_SUPPORT.CHECKING || support === RECORDED_VOICE_SUPPORT.UNKNOWN) {
-      return "Checking recording...";
-    }
-    if (support === RECORDED_VOICE_SUPPORT.UNSUPPORTED) {
-      return "Unsupported in this browser";
-    }
-    return "Bundled recording";
+    if (support === RECORDED_VOICE_SUPPORT.UNSUPPORTED) return "Not available here";
+    return option.uiMeta || "English";
   }
   const voice = resolveUsableVoiceForOption(option);
   if (!voice) {
-    if (!canUseBrowserSpeechFallback()) return "Unavailable on this device";
-    return state.voices.length ? "Unavailable on this device" : "Loading device voice...";
+    if (!canUseBrowserSpeechFallback()) return "Not available here";
+    if (state.voices.length) return "Not available here";
+    return option.uiMeta || "English";
   }
-  if (voice.name && voice.name.toLowerCase() !== option.name.toLowerCase()) {
-    return `${voice.name} · ${voice.lang || "en"}`;
-  }
-  return `${voice.lang || "en"}`;
+  return normalizeLang(voice.lang || option.uiMeta || "en");
 }
 
 function getVoiceUnavailableReason(option) {
@@ -2505,28 +2503,38 @@ function buildVoiceDiagnosticMarkup() {
   const hasLocalSupport = canUseBrowserSpeechFallback();
   if (!hasRecordedSupport && !hasLocalSupport) {
     return `
-      <p class="voice-diagnostic-title">Voice Check</p>
-      <p class="voice-diagnostic-warning">This browser cannot play the bundled narration recordings or device speech voices.</p>
+      <p class="voice-diagnostic-title">Voice Guide</p>
+      <p class="voice-diagnostic-warning">Voices are not available in this browser. Try Chrome, Edge, or Safari.</p>
     `;
   }
 
   const note = !hasLocalSupport
-    ? "Alex and Zoe use bundled recordings. Daniel, Samantha, and Moira depend on device speech voices, which are unavailable in this browser."
+    ? "Alex and Zoe play directly in the app. The other voices are not available in this browser."
     : !state.voices.length
-    ? "Alex and Zoe use bundled recordings. Daniel, Samantha, and Moira will finish mapping as soon as the device speech voices become available."
-    : "Alex and Zoe use bundled recordings. Daniel, Samantha, and Moira use the actual device speech voices mapped below.";
+    ? "Alex and Zoe play directly in the app. The other voices are still loading from this device."
+    : "Alex and Zoe play directly in the app. The other voices use this device.";
 
   const items = VOICE_OPTIONS.map((option) => {
     let label = "";
     if (isRecordedVoiceOption(option)) {
-      label = getVoiceOptionMeta(option);
+      const support = getRecordedVoiceSupport(option);
+      label =
+        support === RECORDED_VOICE_SUPPORT.UNSUPPORTED || !canUseRecordedNarration()
+          ? "Not available"
+          : support === RECORDED_VOICE_SUPPORT.CHECKING || support === RECORDED_VOICE_SUPPORT.UNKNOWN
+          ? "Loading"
+          : "Ready";
     } else {
       const voice = resolveUsableVoiceForOption(option);
       label = voice
-        ? `${voice.name || "Browser default"}${voice.lang ? ` (${voice.lang})` : ""}`
+        ? "Ready"
+        : !canUseBrowserSpeechFallback()
+        ? "Not available"
+        : !state.voices.length
+        ? "Loading"
         : state.voices.length
-        ? "Unavailable on this device"
-        : "Loading device voice...";
+        ? "Not available"
+        : "Loading";
     }
     return `
       <li>
@@ -2537,7 +2545,7 @@ function buildVoiceDiagnosticMarkup() {
   }).join("");
 
   return `
-    <p class="voice-diagnostic-title">Voice Check</p>
+    <p class="voice-diagnostic-title">Voice Guide</p>
     <p class="voice-diagnostic-note">${escapeHtml(note)}</p>
     <ul class="voice-diagnostic-list">${items}</ul>
   `;

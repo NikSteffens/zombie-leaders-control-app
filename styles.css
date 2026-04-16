@@ -582,7 +582,7 @@ button.danger {
 }
 
 .voice-choice-meta {
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
 }
 
@@ -595,26 +595,27 @@ button.danger {
 }
 
 .voice-diagnostic {
-  margin-top: 0.55rem;
-  padding: 0.62rem 0.72rem;
+  margin-top: 0.45rem;
+  padding: 0.46rem 0.58rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-dim);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
+  max-width: 34rem;
 }
 
 .voice-diagnostic-title {
-  margin: 0 0 0.4rem;
+  margin: 0 0 0.22rem;
   color: var(--text-main);
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .voice-diagnostic-note,
 .voice-diagnostic-warning {
-  margin: 0;
-  line-height: 1.45;
+  margin: 0 0 0.36rem;
+  line-height: 1.35;
 }
 
 .voice-diagnostic-warning {
@@ -626,14 +627,15 @@ button.danger {
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.28rem;
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+  gap: 0.18rem 0.65rem;
 }
 
 .voice-diagnostic-list li {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .voice-diagnostic-label {
@@ -644,6 +646,7 @@ button.danger {
 
 .voice-diagnostic-value {
   text-align: right;
+  white-space: nowrap;
 }
 
 .roles-grid {
