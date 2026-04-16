@@ -19,10 +19,13 @@ const DEFAULT_TIMER_WARNING_VOICE_ID = "samantha";
 const DEFAULT_TIMER_WARNING_RATE = 0.8;
 const SCRIPT_PAUSE_MARKER = "__SCRIPT_PAUSE__";
 const SCRIPT_PAUSE_2S_MARKER = "__SCRIPT_PAUSE_2S__";
+const INLINE_SHORT_PAUSE_RE = /\s*(?:\.{4,}|…\.?|…{2,})\s*/g;
 const SCRIPT_TYPES = ["orientation", "intro", "day", "night"];
 const LESSON_TYPES = ["lesson1", "lesson2", "lesson3", "lesson4", "lesson5", "lesson6"];
 const PANEL_TYPES = [...SCRIPT_TYPES, ...LESSON_TYPES];
 const DEFAULT_SELECTED_VOICE_ID = "alex-recorded";
+const MIN_VOICE_RATE = 0.5;
+const MAX_VOICE_RATE = 2;
 const RECORDED_VOICE_SUPPORT = Object.freeze({
   UNKNOWN: "unknown",
   CHECKING: "checking",
@@ -129,7 +132,10 @@ const AMBIENT_PRESETS = [
     name: "Mozart - Requiem",
     engine: "recording",
     gain: 0.58,
-    audioSources: ["assets/audio/mozart-requiem-lacrimosa.ogg"],
+    audioSources: [
+      "assets/audio/mozart-requiem-lacrimosa.mp3",
+      "assets/audio/mozart-requiem-lacrimosa.ogg",
+    ],
     fallbackPresetId: "graveyard-drizzle",
   },
   {
@@ -137,7 +143,10 @@ const AMBIENT_PRESETS = [
     name: "Beethoven - Moonlight Sonata",
     engine: "recording",
     gain: 0.55,
-    audioSources: ["assets/audio/moonlight-sonata.ogg"],
+    audioSources: [
+      "assets/audio/moonlight-sonata.mp3",
+      "assets/audio/moonlight-sonata.ogg",
+    ],
     fallbackPresetId: "graveyard-drizzle",
   },
   {
@@ -155,6 +164,20 @@ const AMBIENT_PRESETS = [
   { id: "warning-pulse", name: "Warning Pulse", engine: "pulse", bpm: 62, gain: 0.24 },
   { id: "amplified-heartbeat", name: "Beating Heart", engine: "heartbeat", bpm: 70, gain: 0.46 },
 ];
+const TIMER_WARNING_AUDIO = Object.freeze({
+  samantha: Object.freeze({
+    10: "assets/audio/timer/samantha-10.mp3",
+    20: "assets/audio/timer/samantha-20.mp3",
+    30: "assets/audio/timer/samantha-30.mp3",
+    60: "assets/audio/timer/samantha-60.mp3",
+  }),
+  daniel: Object.freeze({
+    10: "assets/audio/timer/daniel-10.mp3",
+    20: "assets/audio/timer/daniel-20.mp3",
+    30: "assets/audio/timer/daniel-30.mp3",
+    60: "assets/audio/timer/daniel-60.mp3",
+  }),
+});
 
 const BASE_CITIZEN_ROLE = {
   id: "organizational-citizen",
@@ -319,7 +342,7 @@ const ROLE_ICON_META = Object.freeze({
 
 const SCRIPT_SEGMENT_TEXT = Object.freeze({
   orientation: Object.freeze({
-    N1: "Welcome to Happy Days Corporation (HDC) — an organization where we like to put smiles on everyone’s faces and keep them there. Today, I’m working alongside the Departmental Administrator and our goal is to make your time at HDC as fulfilling and rewarding as possible. Unfortunately, as you are about to find out, there are some extreme structural constraints that limit our ability to do this. Historically, as our name suggests, we have been a very happy organization. Our leaders worked hard to create, advance, represent and embed a sense of shared identity — as sense of ‘we-ness’ — among employees. As a result, this was a place where people enjoyed their work and were both healthy and productive. But HDC has recently been going through a tough time. Things started going downhill after some of our senior executives went on a shonky Leadership Development course last year. This led to them being infected with a toxic mindset that researchers have identified as arising from an approach to management known as Zombie Leadership. Devotees of Zombie Leadership — known as Zombie Leaders — are committed to the idea that leaders are inherently superior to everyone else and hence that they are natural leaders. They think that everything they do is right, that they alone know how best to do things, that everyone can see how wonderful they are, and that they should be extravagantly rewarded for the work they do. Sadly, HDC now has a number of Zombie Leaders in its top ranks and they are in the process of destroying our organization. If the Zombie Leaders destroy the organization, they will have won.",
+    N1: "Welcome to Happy Days Corporation (HDC) — an organization where we like to put smiles on everyone’s faces and keep them there. Today, I’m working alongside the Departmental Administrator and our goal is to make your time at HDC as fulfilling and rewarding as possible. Unfortunately, as you are about to find out, there are some extreme structural constraints that limit our ability to do this. Historically, as our name suggests, we have been a very happy organization. Our leaders worked hard to create, advance, represent and embed a sense of shared identity — as sense of ‘we-ness’ — among employees. As a result, this was a place where people enjoyed their work and were both healthy and productive. But HDC has recently been going through a tough time. Things started going downhill after some of our senior executives went on a shonky Leadership Development course last year. This led to them being infected with a toxic mindset that researchers have identified as arising from an approach to management known as Zombie Leadership. Devotees of Zombie Leadership — known as Zombie Leaders — are committed to the idea that leaders are inherently superior to everyone else and hence that they are natural leaders. They think that everything they do is right, that they alone know how best to do things, that everyone can see how wonderful they are, and that they should be extravagantly rewarded for the work they do. Sadly, HDC now has a number of Zombie Leaders in its top ranks and they are in the process of destroying our organization. If the Zombie Leaders destroy the organization, they will have won. But the good news is, there are still plenty of decent, sensible people working here and they are trying very hard to stave off the Zombie Leadership Apocalypse.",
     O1: "We have a great Integrity Officer, who can view one person's CV each morning to see if they are a Zombie Leader.",
     O2: "We have a great Personnel Manager who can identify one person every day that they will protect from attack by the Zombie Leaders. They can choose to protect themselves, but they must choose a different person every day.",
     O3: "We have a very cluey IT Specialist who can hack the IT system twice in the course of the game — once to get rid of someone they suspect of being a Zombie Leader; once to save someone they want to protect from the Zombie Leaders.",
@@ -330,7 +353,7 @@ const SCRIPT_SEGMENT_TEXT = Object.freeze({
     O8: "Happily, we also have an Intern. Every day they can, if they want, decide to spend time with a Mentor of their choosing. This means that if they are targeted by the Zombie Leaders that night, they won’t be terminated. However, if their mentor is terminated, the intern will be terminated along with them.",
     O9: "We also have a very enthusiastic Office Gossip. They have the dirt on everybody at HDC and if they are targeted by the Zombie Leaders they will not necessarily go quietly — and can take someone else down with them in retaliation if they so desire.",
     O10: "In light of the increasing job demands that the Zombie Leaders are placing on us, we are also lucky to have a Social Club Organizer. In a round of their choosing they can set up a social club for themselves and up to three other people in HDC. Due to the well-evidenced socially curative effects of group memberships,, this protects them all from being harmed by the Zombie Leaders in that round.",
-    N2: "But the good news is, there are still plenty of decent, sensible people working here and they are trying very hard to stave off the Zombie Leadership Apocalypse. Finally, we have a number of Organizational Citizens. They are the backbone of HDC and they have been serving the company loyally for a great many years. We are grateful for their service but mindful that the Zombie Leaders are always looking for ways to reduce their ranks — while at the same time taking credit for everything they achieve. The big question, then, is whether we can save ourselves from the impending Zombie Leadership Apocalypse. Let us not go quietly into that dark night.",
+    N2: "Finally, we have a number of Organizational Citizens. They are the backbone of HDC and they have been serving the company loyally for a great many years. We are grateful for their service but mindful that the Zombie Leaders are always looking for ways to reduce their ranks — while at the same time taking credit for everything they achieve. The big question, then, is whether we can save ourselves from the impending Zombie Leadership Apocalypse. Let us not go quietly into that dark night.",
   }),
   intro: Object.freeze({
     N3: "The first thing I’d like to do is work out what role everyone has, because, after the last restructure that the Zombie Leaders initiated everyone — including me — is very confused. And because some of this information is secret, I’d also like everyone to close your eyes. First, I’d like the Zombie Leaders to open your eyes and acknowledge each other. You are dirtbags and proud of it. Now please close your eyes.",
@@ -353,13 +376,13 @@ const SCRIPT_SEGMENT_TEXT = Object.freeze({
   }),
   night: Object.freeze({
     N6: "The day is fading into night. And I know it’s been a long day and that everyone is very tired, but before you go to bed, we need to do a bit more work and make some plans for tomorrow. I’d also like you to close your eyes because some of these plans need to be private.",
-    O22: "Could the Integrity Officer now open your eyes and indicate who you would like to a background check on tonight? Thank you. Now please close your eyes.",
+    O22: "Could the Integrity Officer now open your eyes and indicate who you would like to a background check on tonight? …. Thank you. Now please close your eyes.",
     O23: "Could the Personnel Manager please open your eyes and indicate whose career you would like to save from attack by Zombie Leaders tonight. Now please close your eyes.",
-    O24: "Could the IT Specialist please open your eyes and let me know if you would like to use your one chance to save someone or to terminate someone? Thank you. Now please close your eyes.",
-    O25: "Could the Training Supervisor open your eyes and let me know who you would like to send on mandatory training tomorrow. Thank you. Tomorrow’s course promises to be very exciting. Now please close your eyes.",
-    O26: "Now could the Social Club Organiser open your eyes and let me know if you want to use your one chance to take up to three people on an excursion that will protect them for a day. If you do, who you would like to take with you? Thank you. Please close your eyes.",
-    O27: "Now could the Office Gossip please open your eyes and look at me. If your career is destroyed by the Zombie Leaders tonight, is there anyone you would like to take down with you? Thank you. Now please close your eyes.",
-    O28: "Now, finally, could the Intern open your eyes and let me know who, if anyone, you would like to have as your mentor for the next 24 hours? Thank you. Now please close your eyes.",
+    O24: "Could the IT Specialist please open your eyes and let me know if you would like to use your one chance to save someone or to terminate someone? …. Thank you. Now please close your eyes.",
+    O25: "Could the Training Supervisor open your eyes and let me know who you would like to send on mandatory training tomorrow. …. Thank you. Tomorrow’s course promises to be very exciting. Now please close your eyes.",
+    O26: "Now could the Social Club Organiser open your eyes and let me know if you want to use your one chance to take up to three people on an excursion that will protect them for a day. If you do, who you would like to take with you? …. Thank you. Please close your eyes.",
+    O27: "Now could the Office Gossip please open your eyes and look at me. If your career is destroyed by the Zombie Leaders tonight, is there anyone you would like to take down with you? …. Thank you. Now please close your eyes.",
+    O28: "Now, finally, could the Intern open your eyes and let me know who, if anyone, you would like to have as your mentor for the next 24 hours? …. Thank you. Now please close your eyes.",
     O29: "We have a Sycophant who is secretly working towards a Zombie Leader victory unbeknownst to both the Zombie Leaders and the Organisational Citizens. If the Zombie Leaders win, the Sycophant wins too.",
     N7: "Thank you everyone for your work today. It’s now time for you to go home and get a good night’s rest, as it’s going to be another busy day tomorrow. So please could everyone close your eyes. It’s now time for the Zombie Leaders to get to work. So Zombie Leaders, open your eyes. Your task is to identify one person in HDC who you want to terminate. Once you have reached an agreement, let me know and I will prepare their off-boarding package.",
   }),
@@ -521,6 +544,7 @@ const state = {
   backgroundVolumeRatio: DEFAULT_BACKGROUND_AUDIO_VOLUME_RATIO,
   narrationVolumeRatio: DEFAULT_NARRATION_VOLUME_RATIO,
   nightAudio: null,
+  timerWarningAudio: null,
   speechSessionId: 0,
   unionRepCount: MIN_UNION_REPS,
   scriptPlayback: null,
@@ -614,6 +638,7 @@ function bindEvents() {
   window.addEventListener("beforeunload", () => {
     stopSpeech();
     stopCountdownTimer({ keepRemaining: true });
+    stopTimerWarningAudio({ silent: true });
     stopTimerSiren({ silent: true });
     stopNightAudio();
   });
@@ -662,10 +687,9 @@ function handleTimerWarningChange() {
 
 function renderTimerVoiceChoices() {
   if (!dom.timerVoiceChoices) return;
-  const timerOptions = VOICE_OPTIONS.filter((option) => option.kind === "local");
-  const availableVoiceIds = timerOptions
-    .filter((option) => isVoiceOptionAvailable(option))
-    .map((option) => option.id);
+  const availableVoiceIds = Object.keys(TIMER_WARNING_AUDIO).filter((voiceId) =>
+    isTimerWarningVoiceAvailable(voiceId)
+  );
 
   if (availableVoiceIds.length && !availableVoiceIds.includes(state.timer.voiceId)) {
     state.timer.voiceId = availableVoiceIds.includes(DEFAULT_TIMER_WARNING_VOICE_ID)
@@ -676,11 +700,11 @@ function renderTimerVoiceChoices() {
   dom.timerVoiceChoices.querySelectorAll("[data-timer-voice-id]").forEach((button) => {
     const voiceId = button.dataset.timerVoiceId;
     const isActive = voiceId === state.timer.voiceId;
-    const isAvailable = isVoiceOptionAvailable(timerOptions.find((option) => option.id === voiceId));
+    const isAvailable = isTimerWarningVoiceAvailable(voiceId);
     button.classList.toggle("active", isActive);
     button.classList.toggle("unavailable", !isAvailable);
     button.setAttribute("aria-pressed", isActive ? "true" : "false");
-    button.disabled = !isAvailable && state.voices.length > 0;
+    button.disabled = !isAvailable;
   });
 }
 
@@ -745,6 +769,7 @@ function pauseCountdownTimer() {
 
 function resetCountdownTimer() {
   stopCountdownTimer({ keepRemaining: false });
+  stopTimerWarningAudio({ silent: true });
   stopTimerSiren({ silent: true });
   state.timer.firedWarnings = new Set();
   syncCountdownTimerUI();
@@ -760,6 +785,7 @@ function stopCountdownTimer(options = {}) {
   state.timer.intervalId = 0;
   state.timer.targetTimeMs = 0;
   state.timer.isRunning = false;
+  stopTimerWarningAudio({ silent: true });
   if (!keepRemaining) {
     state.timer.remainingMs = state.timer.durationMinutes * 60 * 1000;
   }
@@ -798,13 +824,102 @@ function handleTimerWarningThresholds(previousMs, nextMs) {
     if (state.timer.firedWarnings.has(seconds)) return;
     if (previousMs >= thresholdMs && nextMs <= thresholdMs) {
       state.timer.firedWarnings.add(seconds);
-      speakTimerWarning(`${seconds} seconds left.`);
+      speakTimerWarning(seconds);
     }
   });
 }
 
-function speakTimerWarning(message) {
-  speakShortMessage(message, { voiceId: state.timer.voiceId, rate: DEFAULT_TIMER_WARNING_RATE });
+function getTimerWarningClip(voiceId, seconds) {
+  const library = TIMER_WARNING_AUDIO[voiceId];
+  if (!library) return "";
+  return library[Number(seconds)] || "";
+}
+
+function canUseBundledTimerWarningAudio() {
+  const probe = document.createElement("audio");
+  return Boolean(probe.canPlayType?.("audio/mpeg"));
+}
+
+function isTimerWarningVoiceAvailable(voiceId) {
+  if (getTimerWarningClip(voiceId, 10) && canUseBundledTimerWarningAudio()) {
+    return true;
+  }
+  return Boolean(resolveVoiceForId(voiceId)) || (!state.voices.length && canUseBrowserSpeechFallback());
+}
+
+function stopTimerWarningAudio(options = {}) {
+  const audio = state.timerWarningAudio?.audioElement;
+  if (audio) {
+    try {
+      audio.pause();
+      audio.removeAttribute("src");
+      audio.load();
+    } catch (_) {}
+  }
+  state.timerWarningAudio = null;
+  if (!options.silent) {
+    setTimerStatus("Timer warning stopped.");
+  }
+}
+
+function playBundledTimerWarning(seconds, options = {}) {
+  const voiceId = options.voiceId || state.timer.voiceId;
+  const src = getTimerWarningClip(voiceId, seconds);
+  if (!src || !canUseBundledTimerWarningAudio()) return false;
+
+  stopTimerWarningAudio({ silent: true });
+  const audio = new Audio(src);
+  audio.preload = "auto";
+  audio.volume = clamp(
+    typeof options.volume === "number" ? options.volume : state.narrationVolumeRatio,
+    0,
+    1
+  );
+
+  let settled = false;
+  const finish = () => {
+    if (settled) return;
+    settled = true;
+    if (state.timerWarningAudio?.audioElement === audio) {
+      state.timerWarningAudio = null;
+    }
+  };
+
+  audio.addEventListener("ended", finish, { once: true });
+  audio.addEventListener(
+    "error",
+    () => {
+      finish();
+      speakShortMessage(`${seconds} seconds left.`, {
+        voiceId,
+        rate: DEFAULT_TIMER_WARNING_RATE,
+        volume: options.volume,
+      });
+    },
+    { once: true }
+  );
+  state.timerWarningAudio = { audioElement: audio, voiceId, seconds };
+
+  const playResult = audio.play();
+  if (playResult && typeof playResult.catch === "function") {
+    playResult.catch(() => {
+      finish();
+      speakShortMessage(`${seconds} seconds left.`, {
+        voiceId,
+        rate: DEFAULT_TIMER_WARNING_RATE,
+        volume: options.volume,
+      });
+    });
+  }
+  return true;
+}
+
+function speakTimerWarning(seconds) {
+  if (playBundledTimerWarning(seconds)) return;
+  speakShortMessage(`${seconds} seconds left.`, {
+    voiceId: state.timer.voiceId,
+    rate: DEFAULT_TIMER_WARNING_RATE,
+  });
 }
 
 function speakShortMessage(message, options = {}) {
@@ -1899,6 +2014,120 @@ function selectedLocalVoice() {
   return resolveUsableVoiceForOption(selectedVoiceOption());
 }
 
+function isLessonType(type) {
+  return LESSON_TYPES.includes(type);
+}
+
+function getVoiceControlGroupForType(type = null) {
+  return isLessonType(type) ? "lessons" : "narration";
+}
+
+function getVoiceControlGroupForInput(input) {
+  if (input === dom.lessonsVoiceRate || input === dom.lessonsVoiceVolume) {
+    return "lessons";
+  }
+  return "narration";
+}
+
+function getVoiceControlElements(group = "narration") {
+  if (group === "lessons") {
+    return {
+      rateInput: dom.lessonsVoiceRate,
+      rateValue: dom.lessonsVoiceRateValue,
+      volumeInput: dom.lessonsVoiceVolume,
+      volumeValue: dom.lessonsVoiceVolumeValue,
+    };
+  }
+  return {
+    rateInput: dom.voiceRate,
+    rateValue: dom.voiceRateValue,
+    volumeInput: dom.voiceVolume,
+    volumeValue: dom.voiceVolumeValue,
+  };
+}
+
+function clampVoiceRate(value) {
+  return clamp(Number(value) || 1, MIN_VOICE_RATE, MAX_VOICE_RATE);
+}
+
+function getPlaybackRateForGroup(group = "narration") {
+  const { rateInput } = getVoiceControlElements(group);
+  return clampVoiceRate(rateInput?.value ?? 1);
+}
+
+function getPlaybackRateForType(type = null) {
+  return getPlaybackRateForGroup(getVoiceControlGroupForType(type));
+}
+
+function getPlaybackVolumeRatioForGroup(group = "narration") {
+  const { volumeInput } = getVoiceControlElements(group);
+  return clamp((Number(volumeInput?.value ?? 100) || 0) / 100, 0, 1);
+}
+
+function getPlaybackVolumeRatioForType(type = null) {
+  return getPlaybackVolumeRatioForGroup(getVoiceControlGroupForType(type));
+}
+
+function updateVoiceControlGroupReadout(group = "narration") {
+  const { rateInput, rateValue, volumeInput, volumeValue } = getVoiceControlElements(group);
+  const speed = clampVoiceRate(rateInput?.value ?? 1);
+  if (rateInput) rateInput.value = String(speed);
+  if (rateValue) rateValue.textContent = `${speed.toFixed(2)}x`;
+
+  const volumePercent = clamp(Number(volumeInput?.value ?? 100) || 0, 0, 100);
+  if (volumeInput) volumeInput.value = String(volumePercent);
+  if (volumeValue) volumeValue.textContent = `${Math.round(volumePercent)}%`;
+  return {
+    speed,
+    volumeRatio: clamp(volumePercent / 100, 0, 1),
+  };
+}
+
+function refreshPlaybackTimeline(playback, rate) {
+  if (!playback?.fullSegments?.length) return;
+  const nextRate = clampVoiceRate(rate);
+  const elapsedMs = getScriptPlaybackElapsedMs(playback);
+  const timeline = buildScriptTimeline(playback.fullSegments, nextRate);
+  playback.rate = nextRate;
+  playback.lineDurations = timeline.lineDurations;
+  playback.lineOffsets = timeline.lineOffsets;
+  playback.totalMs = timeline.totalMs;
+  playback.lastElapsedMs = clamp(elapsedMs, 0, timeline.totalMs);
+  syncScriptPlaybackUI();
+}
+
+function syncActiveVoiceControlToPlayback(group = "narration") {
+  const activePlayback = state.scriptPlayback;
+  if (!activePlayback || getVoiceControlGroupForType(activePlayback.type) !== group) {
+    return;
+  }
+
+  const nextRate = getPlaybackRateForType(activePlayback.type);
+  const nextVolume = getPlaybackVolumeRatioForType(activePlayback.type);
+  const pendingResume = state.scriptPendingResume?.type === activePlayback.type
+    ? state.scriptPendingResume
+    : null;
+  const pendingLineIndex = pendingResume?.nextLineIndex ?? -1;
+  const priorLineDuration =
+    pendingLineIndex >= 0 ? activePlayback.lineDurations[pendingLineIndex] || 0 : 0;
+  refreshPlaybackTimeline(activePlayback, nextRate);
+
+  if (pendingResume) {
+    const nextLineDuration = activePlayback.lineDurations[pendingLineIndex] || 0;
+    const progressRatio = priorLineDuration
+      ? clamp((pendingResume.lineElapsedMs || 0) / priorLineDuration, 0, 1)
+      : 0;
+    pendingResume.lineElapsedMs = Math.round(nextLineDuration * progressRatio);
+    pendingResume.elapsedMs = clamp(activePlayback.lastElapsedMs || 0, 0, activePlayback.totalMs || 0);
+  }
+
+  if (activePlayback.mode === "recorded" && activePlayback.audioElement) {
+    activePlayback.audioElement.defaultPlaybackRate = nextRate;
+    activePlayback.audioElement.playbackRate = nextRate;
+    activePlayback.audioElement.volume = nextVolume;
+  }
+}
+
 function buildVoiceAssignments(options, voices) {
   const assignments = new Map();
   const usableVoices = Array.isArray(voices)
@@ -2323,39 +2552,27 @@ function normalizeLang(lang) {
 }
 
 function updateVoiceControlReadouts() {
-  const speed = clamp(Number(dom.voiceRate?.value ?? dom.lessonsVoiceRate?.value ?? 1), 0.6, 1.8);
-  if (dom.voiceRate) dom.voiceRate.value = String(speed);
-  if (dom.lessonsVoiceRate) dom.lessonsVoiceRate.value = String(speed);
-  const speedText = `${speed.toFixed(2)}x`;
-  if (dom.voiceRateValue) dom.voiceRateValue.textContent = speedText;
-  if (dom.lessonsVoiceRateValue) dom.lessonsVoiceRateValue.textContent = speedText;
-
-  const volumePercent = clamp(
-    Number(dom.voiceVolume?.value ?? dom.lessonsVoiceVolume?.value ?? 100),
-    0,
-    100
-  );
-  if (dom.voiceVolume) dom.voiceVolume.value = String(volumePercent);
-  if (dom.lessonsVoiceVolume) dom.lessonsVoiceVolume.value = String(volumePercent);
-  const ratio = clamp(volumePercent / 100, 0, 1);
-  state.narrationVolumeRatio = ratio;
-  const volumeText = `${Math.round(ratio * 100)}%`;
-  if (dom.voiceVolumeValue) dom.voiceVolumeValue.textContent = volumeText;
-  if (dom.lessonsVoiceVolumeValue) dom.lessonsVoiceVolumeValue.textContent = volumeText;
+  const narrationSettings = updateVoiceControlGroupReadout("narration");
+  updateVoiceControlGroupReadout("lessons");
+  state.narrationVolumeRatio = narrationSettings.volumeRatio;
 }
 
 function handleVoiceRateInput(event) {
-  const nextValue = clamp(Number(event.currentTarget?.value ?? 1), 0.6, 1.8);
-  if (dom.voiceRate) dom.voiceRate.value = String(nextValue);
-  if (dom.lessonsVoiceRate) dom.lessonsVoiceRate.value = String(nextValue);
+  const group = getVoiceControlGroupForInput(event.currentTarget);
+  const { rateInput } = getVoiceControlElements(group);
+  const nextValue = clampVoiceRate(event.currentTarget?.value ?? 1);
+  if (rateInput) rateInput.value = String(nextValue);
   updateVoiceControlReadouts();
+  syncActiveVoiceControlToPlayback(group);
 }
 
 function handleVoiceVolumeInput(event) {
+  const group = getVoiceControlGroupForInput(event.currentTarget);
+  const { volumeInput } = getVoiceControlElements(group);
   const nextValue = clamp(Number(event.currentTarget?.value ?? 100), 0, 100);
-  if (dom.voiceVolume) dom.voiceVolume.value = String(nextValue);
-  if (dom.lessonsVoiceVolume) dom.lessonsVoiceVolume.value = String(nextValue);
+  if (volumeInput) volumeInput.value = String(nextValue);
   updateVoiceControlReadouts();
+  syncActiveVoiceControlToPlayback(group);
 }
 
 function handleTestVoice() {
@@ -2403,11 +2620,26 @@ function buildLessonSpeechLines(lines = []) {
 }
 
 function splitSpeechChunks(text) {
-  const cleaned = String(text || "").replace(/\s+/g, " ").trim();
-  if (!cleaned) return [];
+  const raw = String(text || "").replace(/\u00a0/g, " ").trim();
+  if (!raw) return [];
 
-  const sentenceChunks = splitTextAtBoundaryPunctuation(cleaned, [".", "!", "?"]);
-  return sentenceChunks.flatMap((chunk) => splitLongSpeechChunk(chunk));
+  const pauseParts = raw
+    .split(INLINE_SHORT_PAUSE_RE)
+    .map((part) => part.replace(/\s+/g, " ").trim());
+  const pauseMatches = raw.match(INLINE_SHORT_PAUSE_RE) || [];
+  const chunks = [];
+
+  pauseParts.forEach((part, index) => {
+    if (part) {
+      const sentenceChunks = splitTextAtBoundaryPunctuation(part, [".", "!", "?"]);
+      chunks.push(...sentenceChunks.flatMap((chunk) => splitLongSpeechChunk(chunk)));
+    }
+    if (index < pauseMatches.length) {
+      chunks.push(SCRIPT_PAUSE_2S_MARKER);
+    }
+  });
+
+  return chunks;
 }
 
 function splitLongSpeechChunk(chunk) {
@@ -2571,14 +2803,15 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
     startSegmentOffsetMs = 0,
   } = options;
   const sessionId = state.speechSessionId;
-  const rate = Number(dom.voiceRate.value);
   const segmentsToPlay = fullSegments.slice(startSegmentIndex);
   let currentSegment = 0;
   let currentOffsetMs = Math.max(0, Number(startSegmentOffsetMs) || 0);
   const isCurrentSession = () => state.speechSessionId === sessionId;
+  const getCurrentRate = () => getPlaybackRateForType(scriptType);
+  const getCurrentVolume = () => getPlaybackVolumeRatioForType(scriptType);
 
   if (scriptType) {
-    startScriptPlayback(scriptType, fullLines, fullSegments, rate, sessionId, {
+    startScriptPlayback(scriptType, fullLines, fullSegments, getCurrentRate(), sessionId, {
       mode: "recorded",
       voiceId: voiceOption.id,
     });
@@ -2616,12 +2849,15 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
 
     const audio = new Audio(currentSegmentData.src);
     audio.preload = "auto";
-    audio.playbackRate = rate;
-    audio.volume = clamp(state.narrationVolumeRatio, 0, 1);
+    const currentRate = getCurrentRate();
+    audio.defaultPlaybackRate = currentRate;
+    audio.playbackRate = currentRate;
+    audio.volume = getCurrentVolume();
 
     const playback = getScriptPlayback(sessionId);
     if (playback) {
       playback.audioElement = audio;
+      refreshPlaybackTimeline(playback, currentRate);
     }
 
     let started = false;
@@ -2671,7 +2907,15 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
 
     const startAudio = () => {
       if (!isCurrentSession()) return;
-      const mediaOffsetSec = clamp((currentOffsetMs * rate) / 1000, 0, (currentSegmentData.durationMs || 0) / 1000);
+      const resumeRate = getCurrentRate();
+      audio.defaultPlaybackRate = resumeRate;
+      audio.playbackRate = resumeRate;
+      audio.volume = getCurrentVolume();
+      const mediaOffsetSec = clamp(
+        (currentOffsetMs * resumeRate) / 1000,
+        0,
+        (currentSegmentData.durationMs || 0) / 1000
+      );
       if (mediaOffsetSec > 0) {
         try {
           audio.currentTime = mediaOffsetSec;
@@ -2708,13 +2952,14 @@ function speakLinesWithLocalVoice(lines, options = {}, voiceOption) {
   const sessionId = state.speechSessionId;
   let chosenVoice = resolveUsableVoiceForOption(voiceOption);
   let chosenVoiceId = voiceOption.id;
-  const rate = Number(dom.voiceRate.value);
   const segmentsToSpeak = fullSegments.slice(startSegmentIndex);
   let currentSegment = 0;
   let useFallbackVoice = false;
   const isCurrentSession = () => state.speechSessionId === sessionId;
+  const getCurrentRate = () => getPlaybackRateForType(scriptType);
+  const getCurrentVolume = () => getPlaybackVolumeRatioForType(scriptType);
   if (scriptType) {
-    startScriptPlayback(scriptType, fullLines, fullSegments, rate, sessionId);
+    startScriptPlayback(scriptType, fullLines, fullSegments, getCurrentRate(), sessionId);
   }
 
   const speakNext = () => {
@@ -2756,8 +3001,13 @@ function speakLinesWithLocalVoice(lines, options = {}, voiceOption) {
       utterance.lang = "en-AU";
     }
 
-    utterance.rate = rate;
-    utterance.volume = clamp(state.narrationVolumeRatio, 0, 1);
+    const currentRate = getCurrentRate();
+    utterance.rate = currentRate;
+    utterance.volume = getCurrentVolume();
+    const playback = getScriptPlayback(sessionId);
+    if (playback) {
+      refreshPlaybackTimeline(playback, currentRate);
+    }
     utterance.onstart = () => {
       if (!isCurrentSession()) return;
       markScriptPlaybackLineStart(sessionId, fullSegmentIndex);
@@ -2985,7 +3235,7 @@ function updateScriptScrub(type, event) {
   const value = Number(event.currentTarget?.value ?? panelDom.progressInput.value ?? 0);
   const max = Number(event.currentTarget?.max ?? panelDom.progressInput.max ?? 1000);
   const ratio = max > 0 ? clamp(value / max, 0, 1) : 0;
-  const rate = Number(dom.voiceRate.value);
+  const rate = getPlaybackRateForType(type);
   const pending = state.scriptPendingResume?.type === type ? state.scriptPendingResume : null;
   const active = state.scriptPlayback?.type === type ? state.scriptPlayback : null;
   const voiceOption =
@@ -3241,12 +3491,12 @@ function syncScriptPlaybackUI() {
 
 function estimateSpeechDurationMs(input, rate) {
   if (typeof input?.durationMs === "number") {
-    return Math.max(0, input.durationMs / clamp(Number(rate) || 1, 0.6, 1.8));
+    return Math.max(0, input.durationMs / clampVoiceRate(rate));
   }
   const text = typeof input === "string" ? input : input?.text;
   if (text === SCRIPT_PAUSE_MARKER) return 0;
   if (text === SCRIPT_PAUSE_2S_MARKER) return 2000;
-  const safeRate = clamp(Number(rate) || 1, 0.6, 1.8);
+  const safeRate = clampVoiceRate(rate);
   const wordCount = String(text || "").trim().split(/\s+/).filter(Boolean).length;
   const sentencePauses = (String(text || "").match(/[.!?]/g) || []).length * 280;
   const clausePauses = (String(text || "").match(/[,:;—-]/g) || []).length * 110;
@@ -3266,7 +3516,7 @@ function buildSpeechSegments(lines = []) {
       return;
     }
 
-    const parts = splitTextAtBoundaryPunctuation(String(line || ""), [".", "!", "?", ";", ":"]);
+    const parts = splitSpeechChunks(String(line || ""));
 
     if (!parts.length) return;
     parts.forEach((part) => {
