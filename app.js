@@ -59,7 +59,7 @@ const VOICE_OPTIONS = Object.freeze([
     recordingSet: "alex",
     sourceLabel: "Bundled recording",
     uiMeta: "en-GB",
-    image: "01_thumbnail icons/Departmental Administrator_Alex.jpeg",
+    image: "assets/voice-thumbnails/alex-voice-thumb.jpeg",
   },
   {
     id: "zoe-recorded",
@@ -68,7 +68,7 @@ const VOICE_OPTIONS = Object.freeze([
     recordingSet: "zoe",
     sourceLabel: "Bundled recording",
     uiMeta: "en-AU",
-    image: "01_thumbnail icons/Departmental Administrator_Zoe.jpeg",
+    image: "assets/voice-thumbnails/zoe-voice-thumb.jpeg",
   },
   {
     id: "daniel",
