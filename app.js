@@ -32,6 +32,7 @@ const RECORDED_VOICE_SUPPORT = Object.freeze({
   SUPPORTED: "supported",
   UNSUPPORTED: "unsupported",
 });
+const RECORDED_VOICE_TEST_PREVIEW_MS = 6000;
 const RECORDED_AUDIO_MIME_TYPES = Object.freeze([
   'audio/mp4; codecs="mp4a.40.2"',
   "audio/mp4",
@@ -2601,7 +2602,14 @@ function handleTestVoice() {
       setAudioStatus(`${selectedOption.name} does not have a test recording available.`, true);
       return;
     }
-    playRecordedSegments([clip], { label: "Voice test" }, selectedOption);
+    playRecordedSegments(
+      [clip],
+      {
+        label: "Voice test",
+        maxSegmentDurationMs: RECORDED_VOICE_TEST_PREVIEW_MS,
+      },
+      selectedOption
+    );
     return;
   }
 
@@ -2815,6 +2823,7 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
     fullSegments = segments,
     startSegmentIndex = 0,
     startSegmentOffsetMs = 0,
+    maxSegmentDurationMs = null,
   } = options;
   const sessionId = state.speechSessionId;
   const segmentsToPlay = fullSegments.slice(startSegmentIndex);
@@ -2867,6 +2876,14 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
     audio.defaultPlaybackRate = currentRate;
     audio.playbackRate = currentRate;
     audio.volume = getCurrentVolume();
+    const maxPreviewSeconds = Number.isFinite(maxSegmentDurationMs) && maxSegmentDurationMs > 0
+      ? Math.min(
+          maxSegmentDurationMs / 1000,
+          Number.isFinite(currentSegmentData.durationMs)
+            ? currentSegmentData.durationMs / 1000
+            : maxSegmentDurationMs / 1000
+        )
+      : null;
 
     const playback = getScriptPlayback(sessionId);
     if (playback) {
@@ -2875,6 +2892,7 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
     }
 
     let started = false;
+    let segmentFinished = false;
     const handleFailure = (reason = "unknown") => {
       if (!isCurrentSession()) return;
       finalizeRecordedVoiceProbe(voiceOption, RECORDED_VOICE_SUPPORT.UNSUPPORTED);
@@ -2887,8 +2905,9 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
       setAudioStatus(`Recording playback failed (${reason}).`, true);
     };
 
-    const handleEnded = () => {
-      if (!isCurrentSession()) return;
+    const finishCurrentSegment = () => {
+      if (segmentFinished || !isCurrentSession()) return;
+      segmentFinished = true;
       const playbackState = getScriptPlayback(sessionId);
       if (playbackState?.audioElement === audio) {
         playbackState.audioElement = null;
@@ -2897,6 +2916,19 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
       currentSegment += 1;
       currentOffsetMs = 0;
       playNext();
+    };
+
+    const handleEnded = () => {
+      finishCurrentSegment();
+    };
+
+    const handlePreviewLimit = () => {
+      if (segmentFinished || !isCurrentSession() || !Number.isFinite(maxPreviewSeconds)) return;
+      if (audio.currentTime < maxPreviewSeconds - 0.05) return;
+      try {
+        audio.pause();
+      } catch (_) {}
+      finishCurrentSegment();
     };
 
     audio.addEventListener("ended", handleEnded, { once: true });
@@ -2918,6 +2950,9 @@ function playRecordedSegments(segments, options = {}, voiceOption = selectedVoic
       },
       { once: true }
     );
+    if (Number.isFinite(maxPreviewSeconds)) {
+      audio.addEventListener("timeupdate", handlePreviewLimit);
+    }
 
     const startAudio = () => {
       if (!isCurrentSession()) return;
