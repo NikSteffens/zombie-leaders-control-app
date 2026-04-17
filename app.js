@@ -436,7 +436,7 @@ const SCRIPT_COMPOSITION = Object.freeze({
     { id: "O26", roles: ["social-club-organizer"], pauseAfter: "cue" },
     { id: "O27", roles: ["office-gossip"], pauseAfter: "cue" },
     { id: "O28", roles: ["intern"], pauseAfter: "cue" },
-    { id: "O29", roles: ["sycophant"] },
+    { id: "O29", roles: ["sycophant"], firstNightOnly: true },
     { id: "N7" },
   ]),
 });
@@ -555,6 +555,7 @@ const state = {
   scriptPlayback: null,
   scriptPendingResume: null,
   completedScriptPlayback: null,
+  completedNightSequenceCount: 0,
   scriptScrub: null,
   nightAudioScrub: null,
   timer: {
@@ -1562,6 +1563,7 @@ function handleGenerateGame() {
       .filter((a) => a.team === "citizen" && a.role.id !== BASE_CITIZEN_ROLE.id)
       .map((a) => a.role)
   );
+  state.completedNightSequenceCount = 0;
   state.scripts = buildScripts(state.assignments, state.activeRoles);
 
   renderSummary();
@@ -1687,7 +1689,10 @@ function buildAssignments(players, zombieCount, selectedRoles) {
   return players.map((name) => allAssignments.find((entry) => entry.player === name)).filter(Boolean);
 }
 
-function shouldIncludeScriptEntry(entry, roleIds) {
+function shouldIncludeScriptEntry(entry, roleIds, options = {}) {
+  if (entry?.firstNightOnly && (options.completedNightSequenceCount || 0) > 0) {
+    return false;
+  }
   if (!entry?.roles?.length) return true;
   return entry.roles.some((roleId) => roleIds.has(roleId));
 }
@@ -1706,9 +1711,10 @@ function buildScriptPlan(type, activeRoles = state.activeRoles) {
   const roleIds = new Set((activeRoles || []).map((role) => role.id));
   const composition = SCRIPT_COMPOSITION[type] || [];
   const plan = [];
+  const completedNightSequenceCount = state.completedNightSequenceCount || 0;
 
   composition.forEach((entry) => {
-    if (!shouldIncludeScriptEntry(entry, roleIds)) return;
+    if (!shouldIncludeScriptEntry(entry, roleIds, { completedNightSequenceCount })) return;
     const text = getScriptSegmentText(type, entry.id);
     if (!text) return;
     plan.push({ id: entry.id, text });
@@ -3386,6 +3392,12 @@ function finishScriptPlayback(sessionId, completed = false) {
         elapsedMs: playback.totalMs,
       }
     : null;
+  if (completed && playback.type === "night") {
+    state.completedNightSequenceCount += 1;
+    state.scripts.night = planToScriptLines(buildScriptPlan("night", state.activeRoles));
+    updateScriptViews();
+    return;
+  }
   syncScriptPlaybackUI();
 }
 
