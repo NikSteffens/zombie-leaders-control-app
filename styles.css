@@ -284,6 +284,31 @@ h3 {
   flex-wrap: wrap;
 }
 
+.section-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.section-toggle {
+  min-width: 7.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.section-body[hidden] {
+  display: none !important;
+}
+
+.panel.collapsed {
+  padding-bottom: 1rem;
+}
+
 .hint {
   margin: 0.12rem 0 0.82rem;
   color: var(--text-dim);
@@ -320,7 +345,13 @@ h3 {
 }
 
 .zombie-count-field {
-  flex-basis: 280px;
+  width: 100%;
+  max-width: none;
+  flex: 1 1 100%;
+}
+
+.zombie-count-field input[type="number"] {
+  width: min(220px, 100%);
 }
 
 #setup-panel .row + .player-names-field {
@@ -2078,6 +2109,11 @@ button.danger {
     gap: 0.7rem;
   }
 
+  .section-head-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
   .row {
     gap: 0.72rem;
     margin-bottom: 0.9rem;
@@ -2108,6 +2144,7 @@ button.danger {
   }
 
   .section-head .button-group,
+  .section-head-actions,
   .audio-controls,
   .script-actions,
   .card-actions,
@@ -2122,6 +2159,7 @@ button.danger {
   }
 
   .section-head .button-group button,
+  .section-head-actions .section-toggle,
   .audio-controls button,
   .script-actions button,
   .card-actions button,

@@ -187,7 +187,7 @@ const TIMER_WARNING_AUDIO = Object.freeze({
 
 const BASE_CITIZEN_ROLE = {
   id: "organizational-citizen",
-  name: "Organizational citizen",
+  name: "Organizational Citizen",
   summary: "You do the hard work that Zombie Leaders like to take credit for.",
 };
 
@@ -199,7 +199,7 @@ const CITIZEN_ROLES = [
   },
   {
     id: "hr-lead",
-    name: "Personnel Manager",
+    name: "HR Manager",
     summary: "You identify one person every day whose career you will save from destruction by the Zombie Leaders.",
   },
   {
@@ -220,7 +220,7 @@ const CITIZEN_ROLES = [
   },
   {
     id: "training-supervisor",
-    name: "Training Supervisor",
+    name: "Training Coordinator",
     summary: "Every day you send one member of the organization off to complete mandatory training.",
   },
   {
@@ -281,7 +281,7 @@ const ROLE_ICON_META = Object.freeze({
     images: ["01_thumbnail icons/Integrity Officer.png"],
   },
   "hr-lead": {
-    label: "Personnel Manager",
+    label: "HR Manager",
     symbol: "🛡️",
     hue: 182,
     images: ["01_thumbnail icons/Personnel Manager.png"],
@@ -309,7 +309,7 @@ const ROLE_ICON_META = Object.freeze({
     ],
   },
   "training-supervisor": {
-    label: "Training Supervisor",
+    label: "Training Coordinator",
     symbol: "🎓",
     hue: 274,
     images: ["01_thumbnail icons/Training supervisor.png"],
@@ -579,6 +579,7 @@ function init() {
   renderRolePicker();
   renderAmbienceOptions();
   bindEvents();
+  initializeSectionToggles();
   updateTimerDurationReadout();
   syncTimerWarningAvailability();
   renderTimerVoiceChoices();
@@ -649,6 +650,40 @@ function bindEvents() {
     stopTimerSiren({ silent: true });
     stopNightAudio();
   });
+}
+
+function initializeSectionToggles() {
+  document.querySelectorAll("[data-section-toggle]").forEach((button) => {
+    button.addEventListener("click", () => toggleSectionVisibility(button));
+    syncSectionToggleState(button);
+  });
+}
+
+function getSectionToggleParts(button) {
+  const targetId = button?.dataset?.sectionTarget || "";
+  const body = targetId ? document.getElementById(targetId) : null;
+  const section = body?.closest(".panel") || button?.closest(".panel") || null;
+  return { body, section };
+}
+
+function syncSectionToggleState(button) {
+  const { body, section } = getSectionToggleParts(button);
+  if (!button || !body) return;
+  const isExpanded = !body.hidden;
+  button.setAttribute("aria-expanded", isExpanded ? "true" : "false");
+  button.innerHTML = isExpanded ? "&#9662; Collapse" : "&#9656; Expand";
+  section?.classList.toggle("collapsed", !isExpanded);
+}
+
+function toggleSectionVisibility(button) {
+  const { body } = getSectionToggleParts(button);
+  if (!button || !body) return;
+  const shouldCollapse = !body.hidden;
+  if (shouldCollapse && body.contains(document.activeElement)) {
+    button.focus();
+  }
+  body.hidden = shouldCollapse;
+  syncSectionToggleState(button);
 }
 
 function handleTimerDurationInput() {
@@ -1239,8 +1274,7 @@ function buildScriptPanelDom() {
         type,
         {
           panel,
-          playButton: panel?.querySelector('[data-script-action="play"]') || null,
-          pauseButton: panel?.querySelector('[data-script-action="pause"]') || null,
+          toggleButton: panel?.querySelector('[data-script-action="toggle"]') || null,
           progressInput: panel?.querySelector("[data-script-progress-input]") || null,
           progressMeta: panel?.querySelector("[data-script-progress-meta]") || null,
           textarea: panel?.querySelector("textarea") || null,
@@ -1254,14 +1288,25 @@ function bindScriptPanelEvents() {
   PANEL_TYPES.forEach((type) => {
     const panelDom = dom.scriptPanels[type];
     if (!panelDom) return;
-    panelDom.playButton?.addEventListener("click", () => playScript(type));
-    panelDom.pauseButton?.addEventListener("click", () => toggleScriptPause(type));
+    panelDom.toggleButton?.addEventListener("click", () => handleScriptPrimaryAction(type));
     panelDom.progressInput?.addEventListener("pointerdown", (event) => beginScriptScrub(type, event));
     panelDom.progressInput?.addEventListener("pointerup", () => endScriptScrub(type));
     panelDom.progressInput?.addEventListener("pointercancel", () => endScriptScrub(type));
     panelDom.progressInput?.addEventListener("input", (event) => updateScriptScrub(type, event));
     panelDom.progressInput?.addEventListener("change", () => endScriptScrub(type));
   });
+}
+
+function handleScriptPrimaryAction(type) {
+  if (state.scriptPendingResume?.type === type) {
+    resumeScriptFromPending(type);
+    return;
+  }
+  if (state.scriptPlayback?.type === type) {
+    toggleScriptPause(type);
+    return;
+  }
+  playScript(type);
 }
 
 function handleOrientationToggle() {
@@ -3176,8 +3221,7 @@ function setScriptPlaybackControlsDisabled(disabled) {
   PANEL_TYPES.forEach((type) => {
     const panelDom = dom.scriptPanels[type];
     if (!panelDom) return;
-    if (panelDom.playButton) panelDom.playButton.disabled = disabled;
-    if (panelDom.pauseButton) panelDom.pauseButton.disabled = true;
+    if (panelDom.toggleButton) panelDom.toggleButton.disabled = disabled;
   });
 }
 
@@ -3487,22 +3531,17 @@ function syncScriptPlaybackUI() {
     panelDom.panel.classList.toggle("active", Boolean(isActive));
     panelDom.panel.classList.toggle("paused", Boolean(isPaused));
 
-    if (panelDom.playButton) {
-      panelDom.playButton.disabled = !hasSpeechSupport || !hasScript || orientationDisabled;
-      const playButtonActive = Boolean(isAwaitingRestart || (isActive && !isPaused && !isAwaitingRestart));
-      panelDom.playButton.classList.toggle("active", playButtonActive);
-      panelDom.playButton.setAttribute("aria-pressed", playButtonActive ? "true" : "false");
-      panelDom.playButton.innerHTML = isAwaitingRestart ? "&#9654; Resume" : "&#9654; Play";
-    }
-
-    if (panelDom.pauseButton) {
-      panelDom.pauseButton.disabled = !isActive || isAwaitingRestart;
-      panelDom.pauseButton.innerHTML = isPaused && !isAwaitingRestart ? "&#9654; Resume" : "&#9208; Pause";
-      panelDom.pauseButton.classList.toggle("active", Boolean(isPaused && !isAwaitingRestart));
-      panelDom.pauseButton.setAttribute(
-        "aria-pressed",
-        isPaused && !isAwaitingRestart ? "true" : "false"
-      );
+    if (panelDom.toggleButton) {
+      panelDom.toggleButton.disabled = !hasSpeechSupport || !hasScript || orientationDisabled;
+      const isPlaying = Boolean(isActive && !isPaused && !isAwaitingRestart);
+      const nextLabel = isAwaitingRestart || isPaused
+        ? "&#9654; Resume"
+        : isPlaying
+        ? "&#9208; Pause"
+        : "&#9654; Play";
+      panelDom.toggleButton.classList.toggle("active", isPlaying);
+      panelDom.toggleButton.setAttribute("aria-pressed", isPlaying ? "true" : "false");
+      panelDom.toggleButton.innerHTML = nextLabel;
     }
 
     if (panelDom.progressInput) {
